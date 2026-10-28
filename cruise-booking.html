@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - Cruise Ship Booking & Boarding Pass</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Leaflet CSS for Live Ship & Port Map Integration -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+    :root {
+      --primary-color: #032b43;
+      --accent-color: #0081a7;
+      --accent-hover: #00afb9;
+      --card-bg: rgba(3, 43, 67, 0.88);
+    }
+    body {
+      background-color: var(--primary-color);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      min-height: 100vh;
+    }
+    .ai-video-bg-container {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -99; overflow: hidden; background-color: #032b43;
+    }
+    .ai-video-bg-container video {
+      position: absolute; top: 50%; left: 50%;
+      min-width: 100%; min-height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover; opacity: 0.8;
+    }
+    .ai-video-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -98;
+      background: linear-gradient(to bottom, rgba(3, 43, 67, 0.5), rgba(3, 43, 67, 0.82));
+      pointer-events: none;
+    }
+    .booking-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .cruise-option-card {
+      background: rgba(13, 71, 107, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      margin-bottom: 1rem;
+    }
+    .cruise-option-card:hover { border-color: var(--accent-hover); }
+    .class-price-badge {
+      background: rgba(0, 175, 185, 0.15);
+      border: 1px solid rgba(0, 175, 185, 0.3);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .class-price-badge.selected {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      color: #032b43;
+      font-weight: 700;
+    }
+    .class-price-badge.selected .text-muted { color: #032b43 !important; }
+    .btn-booking {
+      background-color: var(--accent-hover);
+      color: #032b43;
+      font-weight: 700;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+    }
+    .btn-booking:hover { background-color: #4fd1c5; color: #032b43; }
+    .status-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(3, 43, 67, 0.95);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; overflow-y: auto; padding: 20px;
+    }
+    .boarding-pass-preview {
+      background: #ffffff;
+      color: #032b43;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: left;
+    }
+    .boarding-pass-header {
+      background: #032b43;
+      color: #fff;
+      padding: 15px 20px;
+    }
+    .timeline {
+      position: relative;
+      border-left: 3px solid var(--accent-hover);
+      margin-left: 20px;
+      padding-left: 20px;
+      text-align: left;
+    }
+    .timeline-item { position: relative; margin-bottom: 20px; }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -28px; top: 4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent-hover); box-shadow: 0 0 8px var(--accent-hover);
+    }
+    .payment-option-card {
+      border: 2px solid #1e40af; border-radius: 12px;
+      padding: 12px; cursor: pointer; transition: all 0.2s; background: rgba(0, 0, 0, 0.2);
+    }
+    .payment-option-card.active { border-color: var(--accent-hover); background: rgba(0, 175, 185, 0.15); }
+    /* Interactive Live Map Styling */
+    #liveShipMap {
+      width: 100%;
+      height: 280px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 20px;
+      z-index: 10;
+    }
+  </style>
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+  <!-- Background Video -->
+  <div class="ai-video-bg-container">
+    <video src="mixkit-beautiful-coast-with-motorboats-and-a-pier-seen-from-the-5363-4k.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="ai-video-overlay"></div>
+
+  <div class="container py-5">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+      <a href="transport.html" class="text-info text-decoration-none fw-bold"><i class="fa-solid fa-arrow-left me-1"></i> Back to Transport Selection</a>
+      <div class="badge bg-dark border border-secondary px-3 py-2 text-light">
+        <i class="fa-solid fa-ship text-info me-2"></i> Global Cruise Liners Hub v5.1
+      </div>
+    </div>
+
+    <!-- STEP 1: ROUTE SEARCH -->
+    <div class="booking-card mb-4">
+      <h3 class="mb-3 text-light"><i class="fa-solid fa-anchor text-info me-2"></i> Book Your Luxury Cruise Voyage</h3>
+      <p class="text-muted small mb-4">Select ports to search world-class ocean liners, private cabins, and dining tiers.</p>
+
+      <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label">Departure Seaport / City</label>
+          <input list="portsList" class="form-control bg-dark text-light border-secondary" id="fromInput" value="Mumbai Cruise Terminal, India">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Arrival Seaport / Destination</label>
+          <input list="portsList" class="form-control bg-dark text-light border-secondary" id="toInput" value="Dubai Cruise Port, UAE">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-booking w-100 py-2" onclick="searchCruises()">Search Voyages</button>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="portsList">
+      <option value="Mumbai Cruise Terminal, India"></option>
+      <option value="Goa Port, India"></option>
+      <option value="Singapore Cruise Centre, Singapore"></option>
+      <option value="Dubai Cruise Port, UAE"></option>
+      <option value="Miami Port, USA"></option>
+      <option value="Barcelona Port, Spain"></option>
+    </datalist>
+
+    <!-- STEP 2: RESULTS -->
+    <div id="cruiseResultsSection">
+      <h4 class="mb-3 text-light" id="resultsHeading">Available Cruise Voyages</h4>
+      <div id="cruiseListContainer"></div>
+    </div>
+  </div>
+
+  <!-- MULTI-STEP MODAL -->
+  <div class="status-overlay d-none" id="statusModal">
+    <div class="booking-card text-center p-4 my-auto" style="max-width: 700px; width: 95%;">
+      
+      <!-- SUB-STATE A: BOOKING FORM -->
+      <div id="stateBookingForm" class="text-start">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="text-info mb-0"><i class="fa-solid fa-id-card me-2"></i> Confirm Cruise Cabin Itinerary</h4>
+          <button class="btn btn-sm btn-outline-secondary text-light" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="text-muted small mb-3">Liner: <strong id="modalCruiseName" class="text-light"></strong> | Route: <span id="modalRoute" class="text-light"></span></p>
+
+        <form onsubmit="submitCruiseSlotRequest(event)">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Primary Guest Name</label>
+            <input type="text" class="form-control bg-dark text-light border-secondary" id="passengerName" value="Nagaraj" required>
+          </div>
+
+          <label class="form-label small text-muted mb-2">Selected Cabin Tier:</label>
+          <div class="row g-2 mb-4" id="modalClassBadges"></div>
+
+          <div class="p-3 mb-3 rounded bg-dark border border-secondary d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 text-muted">Total Voyage Fare: <strong id="modalDisplayFare" class="text-info fs-5">₹0</strong></p>
+            </div>
+            <button type="submit" class="btn btn-booking">
+              SUBMIT FOR VERIFICATION <i class="fa-solid fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SUB-STATE B: WAITING FOR ADMIN -->
+      <div id="stateWaiting" class="d-none py-4">
+        <div class="spinner-border text-info mb-3" role="status"></div>
+        <h4>Waiting for Admin Cabin Verification...</h4>
+        <p class="text-muted">Your cruise cabin request has been dispatched to Admin <strong>Nagu</strong> for validation.</p>
+      </div>
+
+      <!-- SUB-STATE C: ADMIN APPROVED -->
+      <div id="stateApproved" class="d-none py-4">
+        <i class="fa-solid fa-circle-check text-success fa-3x mb-3"></i>
+        <h4 class="text-success">Cabin Allocation Verified & Approved!</h4>
+        <p class="text-muted small">Your suite is locked. Proceed to complete secure payment.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <button class="btn btn-success px-4 rounded-pill" onclick="proceedToPayment()"><i class="fa-solid fa-credit-card me-1"></i> Proceed to Pay</button>
+          <button class="btn btn-outline-danger px-4 rounded-pill" onclick="closeModal()"><i class="fa-solid fa-xmark me-1"></i> Cancel</button>
+        </div>
+      </div>
+
+      <!-- SUB-STATE D: SECURE PAYMENT -->
+      <div id="statePayment" class="d-none text-start py-2">
+        <h4 class="text-info mb-3"><i class="fa-solid fa-wallet me-2"></i> Secure Cruise Payment Gateway</h4>
+        <p class="text-muted small">Total amount payable: <strong id="payModalAmount" class="text-light"></strong></p>
+        
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="payment-option-card active" id="optUpi" onclick="selectPaymentMode('UPI')">
+              <i class="fa-solid fa-mobile-screen-button text-info me-1"></i> UPI / Google Pay
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="payment-option-card" id="optCard" onclick="selectPaymentMode('Card')">
+              <i class="fa-solid fa-credit-card text-warning me-1"></i> Credit / Debit Card
+            </div>
+          </div>
+        </div>
+
+        <div id="upiFormBlock">
+          <label class="form-label small text-muted">Enter UPI ID</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-3" value="nagaraj@ybl">
+        </div>
+
+        <div id="cardFormBlock" class="d-none">
+          <label class="form-label small text-muted">Card Number</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-2" value="4532 8910 2214 9011">
+          <div class="row g-2 mb-3">
+            <div class="col-6"><input type="text" class="form-control bg-dark text-light border-secondary" placeholder="MM/YY" value="09/28"></div>
+            <div class="col-6"><input type="password" class="form-control bg-dark text-light border-secondary" placeholder="CVV" value="381"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-booking w-100" onclick="completePaymentSimulation()">
+          Complete Payment & Generate Cruise Boarding Pass <i class="fa-solid fa-lock ms-1"></i>
+        </button>
+      </div>
+
+      <!-- SUB-STATE E: DOWNLOADABLE PASS &rarr; LIVE MAP &rarr; ACCOMMODATIONS -->
+      <div id="stateSuccessFinal" class="d-none text-start py-2">
+        <div class="text-center mb-3">
+          <i class="fa-solid fa-circle-check text-success fa-2x mb-1"></i>
+          <h4 class="text-success mb-1">Payment Successful! Voyage Confirmed</h4>
+          <p class="text-muted small">Download your cruise pass below, track live nautical coordinates, and book shore accommodations.</p>
+        </div>
+
+        <!-- Downloadable Pass Card Preview -->
+        <div class="boarding-pass-preview mb-4" id="cruisePassCard">
+          <div class="boarding-pass-header d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-0 text-white"><i class="fa-solid fa-ship text-info me-2"></i> GEN TRAVELS CRUISE PASS</h5>
+              <small class="text-info" id="cpConfirmationCode">Conf Code: CRV-89412</small>
+            </div>
+            <span class="badge bg-success">Confirmed</span>
+          </div>
+          <div class="p-3">
+            <div class="row mb-3">
+              <div class="col-sm-4">
+                <small class="text-muted d-block">Primary Guest</small>
+                <strong id="cpPassengerName">Nagaraj</strong>
+              </div>
+              <div class="col-sm-4">
+                <small class="text-muted d-block">Vessel Name</small>
+                <strong id="cpVesselName">Royal Oceanis</strong>
+              </div>
+              <div class="col-sm-4">
+                <small class="text-muted d-block">Cabin / Tier</small>
+                <strong id="cpCabinTier">Balcony Suite / C-302</strong>
+              </div>
+            </div>
+            <div class="row border-top pt-2">
+              <div class="col-sm-6">
+                <small class="text-muted d-block">Voyage Route</small>
+                <strong id="cpRoute">Mumbai &rarr; Dubai</strong>
+              </div>
+              <div class="col-sm-6 text-sm-end">
+                <small class="text-muted d-block">Boarding Time</small>
+                <strong class="text-danger">04:00 PM (Pier 4)</strong>
+              </div>
+            </div>
+            <div class="text-center mt-3 pt-2 border-top">
+              <code class="text-dark fw-bold fs-5 tracking-widest" style="letter-spacing: 4px;">|||||| |||| | ||||||| ||||</code>
+              <div style="font-size: 0.7rem;" class="text-muted">Verified Electronic Cruise Pass Barcode</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mb-4">
+          <button class="btn btn-outline-info flex-grow-1" onclick="downloadCruisePassPDF()">
+            <i class="fa-solid fa-download me-1"></i> Download Cruise Pass / Itinerary PDF
+          </button>
+        </div>
+
+        <!-- Live Nautical Map with Integrated Ship Location Tracking -->
+        <h5 class="text-info mb-3"><i class="fa-solid fa-compass me-2"></i> Live Vessel GPS Location & Nautical Route</h5>
+        <div id="liveShipMap"></div>
+
+        <div class="timeline mb-4" id="cruiseTimelineContainer"></div>
+
+        <!-- Destination Accommodations CTA -->
+        <button class="btn btn-booking w-100 py-3" onclick="location.href='accommodations.html'">
+          Explore & Book Destination Accommodations <i class="fa-solid fa-hotel ms-2"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let activeCruiseObj = null;
+    let selectedTierType = 'Balcony Suite';
+    let selectedFare = 14500;
+    let currentBookingId = null;
+    let pollInterval = null;
+    let activeMap = null;
+    let shipMarker = null;
+
+    // Port coordinates lookup for mapping ship route locations accurately
+    const portCoordinates = {
+      "mumbai cruise terminal, india": [18.9438, 72.8353],
+      "goa port, india": [15.4200, 73.8050],
+      "singapore cruise centre, singapore": [1.2644, 103.8219],
+      "dubai cruise port, uae": [25.2697, 55.2890],
+      "miami port, usa": [25.7781, -80.1791],
+      "barcelona port, spain": [41.3685, 2.1827]
+    };
+
+    function getCoordsForPort(portName) {
+      const key = portName.toLowerCase().trim();
+      for (let p in portCoordinates) {
+        if (key.includes(p.split(',')[0])) {
+          return portCoordinates[p];
+        }
+      }
+      return [20.0, 70.0]; // Default fallback coordinates (Arabian Sea region)
+    }
+
+    function calculateDistance(fromStr, toStr) {
+      if (fromStr === toStr) return 400;
+      const combined = (fromStr + toStr).toLowerCase();
+      if (combined.includes('mumbai') && combined.includes('dubai')) return 1800;
+      if (combined.includes('singapore') && combined.includes('mumbai')) return 2700;
+      let hash = 0;
+      for (let i = 0; i < combined.length; i++) {
+        hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return Math.abs(hash % 2800) + 500;
+    }
+
+    function searchCruises() {
+      const fromVal = document.getElementById('fromInput').value.trim();
+      const toVal = document.getElementById('toInput').value.trim();
+
+      if (!fromVal || !toVal) {
+        alert('Please specify both departure and arrival ports.');
+        return;
+      }
+
+      const dist = calculateDistance(fromVal, toVal);
+      document.getElementById('resultsHeading').innerText = `Voyages from ${fromVal} to ${toVal} (~${dist} nautical miles)`;
+      const baseFare = Math.round(dist * 6.5);
+
+      const cruises = [
+        { code: 'MS-Oceanis', name: 'Royal Oceanis Grand Liner', departure: '05:00 PM', arrival: '08:00 AM (+3d)', duration: Math.round(dist / 350) + ' Days', tiers: { 'Interior Cabin': baseFare, 'Balcony Suite': Math.round(baseFare * 1.8), 'Penthouse Villa': Math.round(baseFare * 3.2) } },
+        { code: 'NV-Marina', name: 'Neptune Star Cruise', departure: '09:00 PM', arrival: '02:00 PM (+3d)', duration: Math.round(dist / 320) + ' Days', tiers: { 'Interior Cabin': Math.round(baseFare * 0.9), 'Balcony Suite': Math.round(baseFare * 1.6), 'Penthouse Villa': Math.round(baseFare * 2.9) } }
+      ];
+
+      const container = document.getElementById('cruiseListContainer');
+      container.innerHTML = cruises.map((c, idx) => `
+        <div class="cruise-option-card">
+          <div class="row align-items-center">
+            <div class="col-md-5">
+              <h5 class="mb-1 text-light"><span class="text-info">${c.code}</span> ${c.name}</h5>
+              <small class="text-muted"><i class="fa-solid fa-clock me-1"></i> Departs ${c.departure} &bull; Duration: ${c.duration}</small>
+            </div>
+            <div class="col-md-5">
+              <div class="row g-2">
+                <div class="col-4">
+                  <div class="class-price-badge ${idx===0?'selected':''}" onclick="selectCruiseModal('${c.code}', '${c.name}', 'Interior Cabin', ${c.tiers['Interior Cabin']}, this)">
+                    <div style="font-size:0.75rem;"><strong>Interior</strong> ₹${c.tiers['Interior Cabin']}</div>
+                    <div class="text-success x-small" style="font-size:0.6rem;">Available</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="class-price-badge" onclick="selectCruiseModal('${c.code}', '${c.name}', 'Balcony Suite', ${c.tiers['Balcony Suite']}, this)">
+                    <div style="font-size:0.75rem;"><strong>Balcony</strong> ₹${c.tiers['Balcony Suite']}</div>
+                    <div class="text-info x-small" style="font-size:0.6rem;">Ocean View</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="class-price-badge" onclick="selectCruiseModal('${c.code}', '${c.name}', 'Penthouse Villa', ${c.tiers['Penthouse Villa']}, this)">
+                    <div style="font-size:0.75rem;"><strong>Penthouse</strong> ₹${c.tiers['Penthouse Villa']}</div>
+                    <div class="text-warning x-small" style="font-size:0.6rem;">All Inclusive</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2 text-end mt-2 mt-md-0">
+              <button class="btn btn-sm btn-booking w-100" onclick="openBookingModal('${c.code}', '${c.name}')">Book Cruise</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      activeCruiseObj = { code: cruises[0].code, name: cruises[0].name };
+      selectedTierType = 'Balcony Suite';
+      selectedFare = cruises[0].tiers['Balcony Suite'];
+    }
+
+    function selectCruiseModal(code, name, tier, price, el) {
+      activeCruiseObj = { code: code, name: name };
+      selectedTierType = tier;
+      selectedFare = price;
+      document.querySelectorAll('.class-price-badge').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function openBookingModal(code, name) {
+      activeCruiseObj = activeCruiseObj || { code: code, name: name };
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      document.getElementById('modalCruiseName').innerText = `${activeCruiseObj.code} ${activeCruiseObj.name}`;
+      document.getElementById('modalRoute').innerText = `${fromVal} to ${toVal}`;
+      document.getElementById('modalDisplayFare').innerText = `₹${selectedFare.toLocaleString()}`;
+
+      document.getElementById('modalClassBadges').innerHTML = `
+        <div class="col-4">
+          <div class="class-price-badge ${selectedTierType==='Interior Cabin'?'selected':''}" onclick="setModalTier('Interior Cabin', ${selectedFare}, this)">
+            <strong>Interior</strong><div class="text-muted small">₹${selectedFare}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="class-price-badge ${selectedTierType==='Balcony Suite'?'selected':''}" onclick="setModalTier('Balcony Suite', ${Math.round(selectedFare*1.5)}, this)">
+            <strong>Balcony</strong><div class="text-muted small">₹${Math.round(selectedFare*1.5)}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="class-price-badge ${selectedTierType==='Penthouse Villa'?'selected':''}" onclick="setModalTier('Penthouse Villa', ${Math.round(selectedFare*2.4)}, this)">
+            <strong>Penthouse</strong><div class="text-muted small">₹${Math.round(selectedFare*2.4)}</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('statusModal').classList.remove('d-none');
+      document.getElementById('stateBookingForm').classList.remove('d-none');
+      document.getElementById('stateWaiting').classList.add('d-none');
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateSuccessFinal').classList.add('d-none');
+    }
+
+    function setModalTier(tier, price, el) {
+      document.querySelectorAll('#modalClassBadges .class-price-badge').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedTierType = tier;
+      selectedFare = price;
+      document.getElementById('modalDisplayFare').innerText = `₹${price.toLocaleString()}`;
+    }
+
+    function submitCruiseSlotRequest(e) {
+      e.preventDefault();
+      currentBookingId = 'CRV-' + Math.floor(10000 + Math.random() * 90000);
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      const newBooking = {
+        id: currentBookingId,
+        type: 'Cruise',
+        passengerName: document.getElementById('passengerName').value,
+        routeName: `${fromVal} to ${toVal}`,
+        slotTime: `Voyage Cabin (${selectedTierType})`,
+        seats: ['Suite C-302 (Confirmed)'],
+        totalAmount: selectedFare,
+        phone: '+91 98765 43210',
+        status: 'PENDING',
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      let bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+      bookings.push(newBooking);
+      localStorage.setItem('gt_booking_requests', JSON.stringify(bookings));
+
+      document.getElementById('stateBookingForm').classList.add('d-none');
+      document.getElementById('stateWaiting').classList.remove('d-none');
+      pollAdminApproval();
+    }
+
+    function pollAdminApproval() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        const bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+        const current = bookings.find(b => b.id === currentBookingId);
+        if (current && current.status === 'CONFIRMED') {
+          clearInterval(pollInterval);
+          document.getElementById('stateWaiting').classList.add('d-none');
+          document.getElementById('stateApproved').classList.remove('d-none');
+        } else if (current && current.status === 'DECLINED') {
+          clearInterval(pollInterval);
+          alert('Admin declined your cruise booking.');
+          closeModal();
+        }
+      }, 1500);
+    }
+
+    function proceedToPayment() {
+      document.getElementById('payModalAmount').innerText = `₹${selectedFare.toLocaleString()}.00`;
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.remove('d-none');
+    }
+
+    function selectPaymentMode(mode) {
+      document.getElementById('optUpi').classList.toggle('active', mode === 'UPI');
+      document.getElementById('optCard').classList.toggle('active', mode === 'Card');
+      document.getElementById('upiFormBlock').classList.toggle('d-none', mode !== 'UPI');
+      document.getElementById('cardFormBlock').classList.toggle('d-none', mode !== 'Card');
+    }
+
+    function completePaymentSimulation() {
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateSuccessFinal').classList.remove('d-none');
+
+      const passName = document.getElementById('passengerName').value;
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      document.getElementById('cpConfirmationCode').innerText = `Conf Code: ${currentBookingId}`;
+      document.getElementById('cpPassengerName').innerText = passName;
+      document.getElementById('cpVesselName').innerText = activeCruiseObj.name;
+      document.getElementById('cpCabinTier').innerText = `${selectedTierType} / C-302`;
+      document.getElementById('cpRoute').innerText = `${fromVal} &rarr; ${toVal}`;
+
+      const waypoints = [
+        { title: `${fromVal} Departure Pier`, time: 'Status: Passenger Boarding Completed', status: 'Departed' },
+        { title: 'Open Sea Waypoint Delta (Nautical Coordinates Live)', time: 'Speed: 22 Knots • Calm Waters', status: 'Cruising' },
+        { title: 'Mid-Voyage Entertainment & Gala Dinner', time: 'Scheduled Onboard Event', status: 'Scheduled' },
+        { title: `${toVal} Arrival Port Terminal`, time: 'Estimated Docking Time', status: 'Destination' }
+      ];
+
+      document.getElementById('cruiseTimelineContainer').innerHTML = waypoints.map(w => `
+        <div class="timeline-item">
+          <h6 class="text-light mb-1">${w.title}</h6>
+          <p class="text-muted small mb-0">${w.time} • <span class="text-info">${w.status}</span></p>
+        </div>
+      `).join('');
+
+      // Initialize Live Interactive Map & Ship Marker using Leaflet
+      setTimeout(() => {
+        const fromCoords = getCoordsForPort(fromVal);
+        const toCoords = getCoordsForPort(toVal);
+        // Calculate mid point or live current location slightly off departure towards destination
+        const currentShipCoords = [
+          fromCoords[0] + (toCoords[0] - fromCoords[0]) * 0.35,
+          fromCoords[1] + (toCoords[1] - fromCoords[1]) * 0.35
+        ];
+
+        if (activeMap) {
+          activeMap.remove();
+        }
+
+        activeMap = L.map('liveShipMap').setView(currentShipCoords, 5);
+        
+        // Dark theme tile layer for seamless UI match
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+          maxZoom: 19
+        }).addTo(activeMap);
+
+        // Add departure and destination markers
+        L.marker(fromCoords).addTo(activeMap).bindPopup(`<b>Departure:</b> ${fromVal}`);
+        L.marker(toCoords).addTo(activeMap).bindPopup(`<b>Destination:</b> ${toVal}`);
+
+        // Draw route line between ports
+        const routeLine = L.polyline([fromCoords, toCoords], { color: '#00afb9', weight: 3, dashArray: '5, 10' }).addTo(activeMap);
+        activeMap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+
+        // Add Custom Pulsing Ship Icon Marker for Live Location
+        const shipIcon = L.divIcon({
+          className: 'custom-ship-marker',
+          html: '<div style="background-color: #00afb9; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px #00afb9; border: 2px solid #fff;"><i class="fa-solid fa-ship" style="color: #032b43; font-size: 11px;"></i></div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        shipMarker = L.marker(currentShipCoords, { icon: shipIcon }).addTo(activeMap);
+        shipMarker.bindPopup(`<b>${activeCruiseObj.name}</b><br>Current Speed: 22 Knots<br>Status: En Route`).openPopup();
+      }, 300);
+    }
+
+    function downloadCruisePassPDF() {
+      const passHTML = document.getElementById('cruisePassCard').outerHTML;
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <html><head><title>GEN TRAVELS - Cruise Pass</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <style>body{background:#f8fafc;padding:30px;font-family:sans-serif;}</style>
+        </head><body><div class="container" style="max-width:600px;">${passHTML}
+        <div class="text-center mt-4"><button class="btn btn-primary px-4" onclick="window.print()">Print / Save as PDF</button></div>
+        </div></body></html>
+      `);
+      win.document.close();
+    }
+
+    function closeModal() {
+      if (pollInterval) clearInterval(pollInterval);
+      document.getElementById('statusModal').classList.add('d-none');
+    }
+
+    searchCruises();
+  </script>
+</body>
+</html>

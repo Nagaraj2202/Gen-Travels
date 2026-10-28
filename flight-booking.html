@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - Airlines Booking & Boarding Pass</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --accent-color: #06b6d4;
+      --accent-hover: #0891b2;
+      --card-bg: rgba(15, 23, 42, 0.85);
+    }
+    body {
+      background-color: var(--primary-color);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      min-height: 100vh;
+    }
+    /* Background Video Styling */
+    .ai-video-bg-container {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -99; overflow: hidden; background-color: #0f172a;
+    }
+    .ai-video-bg-container video {
+      position: absolute; top: 50%; left: 50%;
+      min-width: 100%; min-height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover; opacity: 0.85;
+    }
+    .ai-video-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -98;
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.75));
+      pointer-events: none;
+    }
+    .booking-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .flight-option-card {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      margin-bottom: 1rem;
+    }
+    .flight-option-card:hover { border-color: var(--accent-color); }
+    .class-price-badge {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .class-price-badge.selected {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .class-price-badge.selected .text-muted { color: #0f172a !important; }
+    .btn-booking {
+      background-color: var(--accent-color);
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+    }
+    .btn-booking:hover { background-color: var(--accent-hover); color: #ffffff; }
+    .status-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.94);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; overflow-y: auto; padding: 20px;
+    }
+    /* Printable/Downloadable Boarding Pass Ticket Preview */
+    .boarding-pass-preview {
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: left;
+      position: relative;
+    }
+    .boarding-pass-header {
+      background: #0f172a;
+      color: #fff;
+      padding: 15px 20px;
+    }
+    .timeline {
+      position: relative;
+      border-left: 3px solid var(--accent-color);
+      margin-left: 20px;
+      padding-left: 20px;
+      text-align: left;
+    }
+    .timeline-item { position: relative; margin-bottom: 20px; }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -28px; top: 4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent-color); box-shadow: 0 0 8px var(--accent-color);
+    }
+    .payment-option-card {
+      border: 2px solid #334155; border-radius: 12px;
+      padding: 12px; cursor: pointer; transition: all 0.2s; background: rgba(0, 0, 0, 0.2);
+    }
+    .payment-option-card.active { border-color: var(--accent-color); background: rgba(6, 182, 212, 0.15); }
+  </style>
+</head>
+<body>
+
+  <div class="ai-video-bg-container">
+    <video src="mixkit-flight-getting-ready-for-departure-4065-4k.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="ai-video-overlay"></div>
+
+  <div class="container py-5">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+      <a href="transport.html" class="text-info text-decoration-none fw-bold"><i class="fa-solid fa-arrow-left me-1"></i> Back to Transport Selection</a>
+      <div class="badge bg-dark border border-secondary px-3 py-2 text-light">
+        <i class="fa-solid fa-plane-departure text-info me-2"></i> Global Airlines Hub v5.0
+      </div>
+    </div>
+
+    <div class="booking-card mb-4">
+      <h3 class="mb-3 text-light"><i class="fa-solid fa-plane text-info me-2"></i> Book Your Flights Online</h3>
+      <p class="text-muted small mb-4">Search from hundreds of flights daily to all destinations with flexible seat classes and fares.</p>
+
+      <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label">Departing Airport / City</label>
+          <input list="airportsList" class="form-control bg-dark text-light border-secondary" id="fromInput" value="Mumbai (BOM), India">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Destination Airport / City</label>
+          <input list="airportsList" class="form-control bg-dark text-light border-secondary" id="toInput" value="Dubai (DXB), UAE">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-booking w-100 py-2" onclick="searchFlights()">Search Flights</button>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="airportsList">
+      <option value="Mumbai (BOM), India"></option>
+      <option value="Bangalore (BLR), India"></option>
+      <option value="Chennai (MAA), India"></option>
+      <option value="Delhi (DEL), India"></option>
+      <option value="Dubai (DXB), UAE"></option>
+      <option value="Singapore (SIN), Singapore"></option>
+      <option value="London (LHR), UK"></option>
+      <option value="New York (JFK), USA"></option>
+    </datalist>
+
+    <div id="flightResultsSection">
+      <h4 class="mb-3 text-light" id="resultsHeading">Available Flights</h4>
+      <div id="flightListContainer"></div>
+    </div>
+  </div>
+
+  <div class="status-overlay d-none" id="statusModal">
+    <div class="booking-card text-center p-4 my-auto" style="max-width: 700px; width: 95%;">
+      
+      <div id="stateBookingForm" class="text-start">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="text-info mb-0"><i class="fa-solid fa-ticket me-2"></i> Confirm Flight Itinerary</h4>
+          <button class="btn btn-sm btn-outline-secondary text-light" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="text-muted small mb-3">Flight: <strong id="modalFlightName" class="text-light"></strong> | Route: <span id="modalRoute" class="text-light"></span></p>
+
+        <form onsubmit="submitFlightSlotRequest(event)">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Passenger Full Name</label>
+            <input type="text" class="form-control bg-dark text-light border-secondary" id="passengerName" value="Nagaraj" required>
+          </div>
+
+          <label class="form-label small text-muted mb-2">Selected Seating Class:</label>
+          <div class="row g-2 mb-4" id="modalClassBadges"></div>
+
+          <div class="p-3 mb-3 rounded bg-dark border border-secondary d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 text-muted">Total Payable Fare: <strong id="modalDisplayFare" class="text-info fs-5">₹0</strong></p>
+            </div>
+            <button type="submit" class="btn btn-booking">
+              SUBMIT FOR VERIFICATION <i class="fa-solid fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div id="stateWaiting" class="d-none py-4">
+        <div class="spinner-border text-info mb-3" role="status"></div>
+        <h4>Waiting for Airline Seat Verification...</h4>
+        <p class="text-muted">Your seat allocation request has been sent to Admin <strong>Nagu</strong> for validation.</p>
+      </div>
+
+      <div id="stateApproved" class="d-none py-4">
+        <i class="fa-solid fa-circle-check text-success fa-3x mb-3"></i>
+        <h4 class="text-success">Seat Allocation Verified & Approved!</h4>
+        <p class="text-muted small">Your seat is locked. Proceed to complete secure payment.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <button class="btn btn-success px-4 rounded-pill" onclick="proceedToPayment()"><i class="fa-solid fa-credit-card me-1"></i> Proceed to Pay</button>
+          <button class="btn btn-outline-danger px-4 rounded-pill" onclick="closeModal()"><i class="fa-solid fa-xmark me-1"></i> Cancel</button>
+        </div>
+      </div>
+
+      <div id="statePayment" class="d-none text-start py-2">
+        <h4 class="text-info mb-3"><i class="fa-solid fa-wallet me-2"></i> Secure Airline Payment Gateway</h4>
+        <p class="text-muted small">Total amount payable: <strong id="payModalAmount" class="text-light"></strong></p>
+        
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="payment-option-card active" id="optUpi" onclick="selectPaymentMode('UPI')">
+              <i class="fa-solid fa-mobile-screen-button text-info me-1"></i> UPI / Google Pay
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="payment-option-card" id="optCard" onclick="selectPaymentMode('Card')">
+              <i class="fa-solid fa-credit-card text-warning me-1"></i> Credit / Debit Card
+            </div>
+          </div>
+        </div>
+
+        <div id="upiFormBlock">
+          <label class="form-label small text-muted">Enter UPI ID</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-3" value="nagaraj@ybl">
+        </div>
+
+        <div id="cardFormBlock" class="d-none">
+          <label class="form-label small text-muted">Card Number</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-2" value="4532 8910 2214 9011">
+          <div class="row g-2 mb-3">
+            <div class="col-6"><input type="text" class="form-control bg-dark text-light border-secondary" placeholder="MM/YY" value="09/28"></div>
+            <div class="col-6"><input type="password" class="form-control bg-dark text-light border-secondary" placeholder="CVV" value="381"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-booking w-100" onclick="completePaymentSimulation()">
+          Complete Payment & Generate Boarding Pass <i class="fa-solid fa-lock ms-1"></i>
+        </button>
+      </div>
+
+      <div id="stateSuccessFinal" class="d-none text-start py-2">
+        <div class="text-center mb-3">
+          <i class="fa-solid fa-circle-check text-success fa-2x mb-1"></i>
+          <h4 class="text-success mb-1">Payment Successful! Booking Confirmed</h4>
+          <p class="text-muted small">Review your boarding pass, download itinerary, or explore route map & accommodations.</p>
+        </div>
+
+        <div class="boarding-pass-preview mb-4" id="boardingPassCard">
+          <div class="boarding-pass-header d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-0 text-white"><i class="fa-solid fa-plane-departure text-info me-2"></i> GEN TRAVELS BOARDING PASS</h5>
+              <small class="text-info" id="bpConfirmationCode">Conf Code: DGF5459S</small>
+            </div>
+            <span class="badge bg-success">Confirmed</span>
+          </div>
+          <div class="p-3">
+            <div class="row mb-3">
+              <div class="col-sm-4">
+                <small class="text-muted d-block">Passenger</small>
+                <strong id="bpPassengerName">Nagaraj</strong>
+              </div>
+              <div class="col-sm-4">
+                <small class="text-muted d-block">Flight No</small>
+                <strong id="bpFlightNo">AI-482</strong>
+              </div>
+              <div class="col-sm-4">
+                <small class="text-muted d-block">Class / Seat</small>
+                <strong id="bpClassSeat">Economy / 14A</strong>
+              </div>
+            </div>
+            <div class="row border-top pt-2">
+              <div class="col-sm-6">
+                <small class="text-muted d-block">Route</small>
+                <strong id="bpRoute">Mumbai (BOM) &rarr; Dubai (DXB)</strong>
+              </div>
+              <div class="col-sm-6 text-sm-end">
+                <small class="text-muted d-block">Boarding Time</small>
+                <strong class="text-danger">10:15 AM (Gate A11)</strong>
+              </div>
+            </div>
+            <div class="text-center mt-3 pt-2 border-top">
+              <code class="text-dark fw-bold fs-5 tracking-widest" style="letter-spacing: 4px;">|||||| |||| | ||||||| ||||</code>
+              <div style="font-size: 0.7rem;" class="text-muted">E-Ticket Barcode Verified</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mb-4">
+          <button class="btn btn-outline-info flex-grow-1" onclick="downloadBoardingPassPDF()">
+            <i class="fa-solid fa-download me-1"></i> Download Boarding Pass / Itinerary
+          </button>
+        </div>
+
+        <h5 class="text-info mb-3"><i class="fa-solid fa-route me-2"></i> Live Flight Transit Map</h5>
+        <div class="timeline mb-4" id="flightTimelineContainer"></div>
+
+        <button class="btn btn-booking w-100 py-3" onclick="location.href='accommodations.html'">
+          Explore & Book Destination Accommodations <i class="fa-solid fa-hotel ms-2"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let activeFlightObj = null;
+    let selectedClassType = 'Economy';
+    let selectedFare = 4500;
+    let currentBookingId = null;
+    let pollInterval = null;
+
+    function calculateDistance(fromStr, toStr) {
+      if (fromStr === toStr) return 500;
+      const combined = (fromStr + toStr).toLowerCase();
+      if (combined.includes('mumbai') && combined.includes('dubai')) return 2000;
+      if (combined.includes('delhi') && combined.includes('singapore')) return 4150;
+      let hash = 0;
+      for (let i = 0; i < combined.length; i++) {
+        hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return Math.abs(hash % 3500) + 600;
+    }
+
+    function searchFlights() {
+      const fromVal = document.getElementById('fromInput').value.trim();
+      const toVal = document.getElementById('toInput').value.trim();
+
+      if (!fromVal || !toVal) {
+        alert('Please specify both departure and arrival locations.');
+        return;
+      }
+
+      const dist = calculateDistance(fromVal, toVal);
+      document.getElementById('resultsHeading').innerText = `Flights from ${fromVal} to ${toVal} (~${dist} km)`;
+      const baseEco = Math.round(dist * 3.5);
+
+      const flights = [
+        { code: 'AI-482', name: 'Air Express Jet', departure: '08:15 AM', arrival: '12:30 PM', duration: Math.round(dist / 650) + 'h 15m', classes: { 'Economy': baseEco, 'Business': Math.round(baseEco * 2.4), 'First Class': Math.round(baseEco * 4.2) } },
+        { code: '6E-712', name: 'SkyWings Global', departure: '13:45 PM', arrival: '18:00 PM', duration: Math.round(dist / 680) + 'h 10m', classes: { 'Economy': Math.round(baseEco * 0.9), 'Business': Math.round(baseEco * 2.1), 'First Class': Math.round(baseEco * 3.8) } }
+      ];
+
+      const container = document.getElementById('flightListContainer');
+      container.innerHTML = flights.map((f, idx) => `
+        <div class="flight-option-card">
+          <div class="row align-items-center">
+            <div class="col-md-5">
+              <h5 class="mb-1 text-light"><span class="text-info">${f.code}</span> ${f.name}</h5>
+              <small class="text-muted"><i class="fa-solid fa-clock me-1"></i> ${f.departure} &rarr; ${f.arrival} &bull; Duration: ${f.duration}</small>
+            </div>
+            <div class="col-md-5">
+              <div class="row g-2">
+                <div class="col-4">
+                  <div class="class-price-badge ${idx===0?'selected':''}" onclick="selectFlightModal('${f.code}', '${f.name}', 'Economy', ${f.classes['Economy']}, this)">
+                    <div style="font-size:0.75rem;"><strong>Eco</strong> ₹${f.classes['Economy']}</div>
+                    <div class="text-success x-small" style="font-size:0.6rem;">Available</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="class-price-badge" onclick="selectFlightModal('${f.code}', '${f.name}', 'Business', ${f.classes['Business']}, this)">
+                    <div style="font-size:0.75rem;"><strong>Biz</strong> ₹${f.classes['Business']}</div>
+                    <div class="text-info x-small" style="font-size:0.6rem;">Lounge</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="class-price-badge" onclick="selectFlightModal('${f.code}', '${f.name}', 'First Class', ${f.classes['First Class']}, this)">
+                    <div style="font-size:0.75rem;"><strong>First</strong> ₹${f.classes['First Class']}</div>
+                    <div class="text-warning x-small" style="font-size:0.6rem;">Suite</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2 text-end mt-2 mt-md-0">
+              <button class="btn btn-sm btn-booking w-100" onclick="openBookingModal('${f.code}', '${f.name}')">Book Flight</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      activeFlightObj = { code: flights[0].code, name: flights[0].name };
+      selectedClassType = 'Economy';
+      selectedFare = flights[0].classes['Economy'];
+    }
+
+    function selectFlightModal(code, name, cls, price, el) {
+      activeFlightObj = { code: code, name: name };
+      selectedClassType = cls;
+      selectedFare = price;
+      document.querySelectorAll('.class-price-badge').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function openBookingModal(code, name) {
+      activeFlightObj = activeFlightObj || { code: code, name: name };
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      document.getElementById('modalFlightName').innerText = `${activeFlightObj.code} ${activeFlightObj.name}`;
+      document.getElementById('modalRoute').innerText = `${fromVal} to ${toVal}`;
+      document.getElementById('modalDisplayFare').innerText = `₹${selectedFare.toLocaleString()}`;
+
+      document.getElementById('modalClassBadges').innerHTML = `
+        <div class="col-4">
+          <div class="class-price-badge ${selectedClassType==='Economy'?'selected':''}" onclick="setModalClass('Economy', ${selectedFare}, this)">
+            <strong>Economy</strong><div class="text-muted small">₹${selectedFare}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="class-price-badge ${selectedClassType==='Business'?'selected':''}" onclick="setModalClass('Business', ${Math.round(selectedFare*2.2)}, this)">
+            <strong>Business</strong><div class="text-muted small">₹${Math.round(selectedFare*2.2)}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="class-price-badge ${selectedClassType==='First Class'?'selected':''}" onclick="setModalClass('First Class', Math.round(selectedFare*3.8), this)">
+            <strong>First Class</strong><div class="text-muted small">₹${Math.round(selectedFare*3.8)}</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('statusModal').classList.remove('d-none');
+      document.getElementById('stateBookingForm').classList.remove('d-none');
+      document.getElementById('stateWaiting').classList.add('d-none');
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateSuccessFinal').classList.add('d-none');
+    }
+
+    function setModalClass(cls, price, el) {
+      document.querySelectorAll('#modalClassBadges .class-price-badge').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedClassType = cls;
+      selectedFare = price;
+      document.getElementById('modalDisplayFare').innerText = `₹${price.toLocaleString()}`;
+    }
+
+    function submitFlightSlotRequest(e) {
+      e.preventDefault();
+      currentBookingId = 'FLT-' + Math.floor(100000 + Math.random() * 900000);
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      const newBooking = {
+        id: currentBookingId,
+        type: 'Flight',
+        passengerName: document.getElementById('passengerName').value,
+        routeName: `${fromVal} to ${toVal}`,
+        slotTime: `Flight Departure (${selectedClassType})`,
+        seats: ['Seat 14A - Window (Confirmed)'],
+        totalAmount: selectedFare,
+        phone: '+91 98765 43210',
+        status: 'PENDING',
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      let bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+      bookings.push(newBooking);
+      localStorage.setItem('gt_booking_requests', JSON.stringify(bookings));
+
+      document.getElementById('stateBookingForm').classList.add('d-none');
+      document.getElementById('stateWaiting').classList.remove('d-none');
+      pollAdminApproval();
+    }
+
+    function pollAdminApproval() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        const bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+        const current = bookings.find(b => b.id === currentBookingId);
+        if (current && current.status === 'CONFIRMED') {
+          clearInterval(pollInterval);
+          document.getElementById('stateWaiting').classList.add('d-none');
+          document.getElementById('stateApproved').classList.remove('d-none');
+        } else if (current && current.status === 'DECLINED') {
+          clearInterval(pollInterval);
+          alert('Admin declined your flight booking.');
+          closeModal();
+        }
+      }, 1500);
+    }
+
+    function proceedToPayment() {
+      document.getElementById('payModalAmount').innerText = `₹${selectedFare.toLocaleString()}.00`;
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.remove('d-none');
+    }
+
+    function selectPaymentMode(mode) {
+      document.getElementById('optUpi').classList.toggle('active', mode === 'UPI');
+      document.getElementById('optCard').classList.toggle('active', mode === 'Card');
+      document.getElementById('upiFormBlock').classList.toggle('d-none', mode !== 'UPI');
+      document.getElementById('cardFormBlock').classList.toggle('d-none', mode !== 'Card');
+    }
+
+    function completePaymentSimulation() {
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateSuccessFinal').classList.remove('d-none');
+
+      const passName = document.getElementById('passengerName').value;
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      document.getElementById('bpConfirmationCode').innerText = `Conf Code: ${currentBookingId}`;
+      document.getElementById('bpPassengerName').innerText = passName;
+      document.getElementById('bpFlightNo').innerText = activeFlightObj.code;
+      document.getElementById('bpClassSeat').innerText = `${selectedClassType} / 14A`;
+      document.getElementById('bpRoute').innerHTML = `${fromVal} &rarr; ${toVal}`;
+
+      const stops = [
+        { title: `${fromVal} Departure Gate T2`, time: 'Status: Boarding Completed', status: 'Departed' },
+        { title: 'Cruising Altitude (36,000 ft)', time: 'Airway Waypoint Alpha', status: 'In Flight' },
+        { title: 'Air Traffic Approach Control', time: 'Estimated Landing in 45m', status: 'On Route' },
+        { title: `${toVal} Arrival Terminal`, time: 'Scheduled Landing Time', status: 'Destination' }
+      ];
+
+      document.getElementById('flightTimelineContainer').innerHTML = stops.map(s => `
+        <div class="timeline-item">
+          <h6 class="text-light mb-1">${s.title}</h6>
+          <p class="text-muted small mb-0">${s.time} • <span class="text-info">${s.status}</span></p>
+        </div>
+      `).join('');
+    }
+
+    function downloadBoardingPassPDF() {
+      const passHTML = document.getElementById('boardingPassCard').outerHTML;
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <html><head><title>GEN TRAVELS - Boarding Pass</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <style>body{background:#f8fafc;padding:30px;font-family:sans-serif;}</style>
+        </head><body><div class="container" style="max-width:600px;">${passHTML}
+        <div class="text-center mt-4"><button class="btn btn-primary px-4" onclick="window.print()">Print / Save as PDF</button></div>
+        </div></body></html>
+      `);
+      win.document.close();
+    }
+
+    function closeModal() {
+      if (pollInterval) clearInterval(pollInterval);
+      document.getElementById('statusModal').classList.add('d-none');
+    }
+
+    searchFlights();
+  </script>
+</body>
+</html>

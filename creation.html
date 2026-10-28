@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - Transport Selection</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --accent-color: #06b6d4;
+      --card-bg: rgba(15, 23, 42, 0.78);
+    }
+    body {
+      background-color: var(--primary-color);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      min-height: 100vh;
+    }
+    /* High Clarity Single AI Travel Video Background Styling */
+    .ai-video-bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -99;
+      overflow: hidden;
+      background-color: #0f172a;
+    }
+    .ai-video-bg-container video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      opacity: 0.85;
+    }
+    .ai-video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -98;
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.6));
+      pointer-events: none;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem 0;
+    }
+    .transport-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .transport-card:hover {
+      transform: translateY(-12px) scale(1.02);
+      box-shadow: 0 20px 30px rgba(6, 182, 212, 0.25);
+      border-color: var(--accent-color);
+    }
+    .transport-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ai-video-bg-container" id="videoContainer">
+    <video src="mixkit-rolling-corridor-at-an-airport-4642-4k.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="ai-video-overlay"></div>
+
+  <div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold">Select Mode of Transport</h2>
+    <div class="card-grid">
+      
+      <div class="transport-card" onclick="location.href='buses.html'">
+        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957" alt="Bus Travel">
+        <div class="p-3 text-center">
+          <h3 class="h5 mb-0">Express Bus</h3>
+        </div>
+      </div>
+
+      <div class="transport-card" onclick="location.href='train_search_booking.html'">
+        <img src="https://images.unsplash.com/photo-1474487548417-781cb71495f3" alt="Train Travel">
+        <div class="p-3 text-center">
+          <h3 class="h5 mb-0">Bullet Train</h3>
+        </div>
+      </div>
+
+      <div class="transport-card" onclick="location.href='flight-booking.html'">
+        <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05" alt="Flight Travel">
+        <div class="p-3 text-center">
+          <h3 class="h5 mb-0">Airlines</h3>
+        </div>
+      </div>
+
+      <div class="transport-card" onclick="location.href='cruise-booking.html'">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT76_BhWBB6-AAxd_qlcf_DThM30u1K46vtBPNLzZvuHg&s=10" alt="Cruise Travel">
+        <div class="p-3 text-center">
+          <h3 class="h5 mb-0">Cruise Ship</h3>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

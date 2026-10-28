@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - Integrated Bus Booking, Payment, Map & Accommodations</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --accent-color: #06b6d4;
+      --accent-hover: #0891b2;
+      --card-bg: rgba(15, 23, 42, 0.75); /* Slight extra opacity for background readability on video */
+      --seat-available: #334155;
+      --seat-selected: #06b6d4;
+      --seat-occupied: #475569;
+    }
+    body {
+      background-color: var(--primary-color);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      min-height: 100vh;
+    }
+    /* High Clarity Single AI Travel Video Background Styling */
+    .ai-video-bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -99;
+      overflow: hidden;
+      background-color: #0f172a;
+    }
+    .ai-video-bg-container video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      opacity: 0.85; /* High clarity & brightness */
+    }
+    /* Lighter gradient overlay for vibrant color and contrast */
+    .ai-video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -98;
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.5));
+      pointer-events: none;
+    }
+    .booking-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .bus-container {
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .driver-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+      color: #94a3b8;
+    }
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .seat {
+      height: 40px;
+      background-color: var(--seat-available);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    .seat:hover:not(.occupied) {
+      background-color: var(--accent-hover);
+      transform: scale(1.08);
+    }
+    .seat.selected {
+      background-color: var(--seat-selected);
+      color: #0f172a;
+      box-shadow: 0 0 12px var(--accent-color);
+    }
+    .seat.occupied {
+      background-color: var(--seat-occupied);
+      color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    .seat:nth-child(4n-2) {
+      margin-right: 18px;
+    }
+    .btn-booking {
+      background-color: var(--accent-color);
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+    }
+    .btn-booking:hover {
+      background-color: var(--accent-hover);
+      color: #ffffff;
+    }
+    .status-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .timeline {
+      position: relative;
+      border-left: 3px solid var(--accent-color);
+      margin-left: 20px;
+      padding-left: 20px;
+      text-align: left;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -28px;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+    .payment-option-card {
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .payment-option-card.active {
+      border-color: var(--accent-color);
+      background: rgba(6, 182, 212, 0.15);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ai-video-bg-container" id="videoContainer">
+    <video src="mixkit-atop-the-city-of-tokyo-at-night-4455-full-hd.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="ai-video-overlay"></div>
+
+  <div class="container py-5">
+    <div class="mb-3">
+      <a href="buses.html" class="text-info text-decoration-none fw-bold"><i class="fa-solid fa-arrow-left me-1"></i> Back to Search Routes</a>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="booking-card">
+          <h3 class="mb-4"><i class="fa-solid fa-bus text-info me-2"></i> <span id="busTitle">Express Bus Ticket Booking</span></h3>
+          
+          <form id="busBookingForm" onsubmit="submitSlotRequest(event)">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">From City</label>
+                <input type="text" class="form-control bg-dark text-light border-secondary" id="fromCity" readonly>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">To City</label>
+                <input type="text" class="form-control bg-dark text-light border-secondary" id="toCity" readonly>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Travel Date</label>
+                <input type="date" class="form-control bg-dark text-light border-secondary" id="travelDate" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Departure Time Slot</label>
+                <select class="form-select bg-dark text-light border-secondary" id="timeSlotSelect" required></select>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-md-12">
+                <label class="form-label">Passenger Name</label>
+                <input type="text" class="form-control bg-dark text-light border-secondary" id="passengerName" value="Nagaraj" required>
+              </div>
+            </div>
+
+            <div class="p-3 mb-4 rounded bg-dark border border-secondary d-flex justify-content-between align-items-center">
+              <div>
+                <p class="mb-1 text-muted">Selected Seats: <strong id="displaySeat" class="text-info">None</strong></p>
+                <p class="mb-0 text-muted">Total Fare: <strong id="displayFare" class="text-light">₹0.00</strong></p>
+              </div>
+              <button type="submit" class="btn btn-booking">
+                BOOK SLOT <i class="fa-solid fa-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="booking-card text-center">
+          <h4 class="mb-3">Select Your Seat</h4>
+          <div class="bus-container">
+            <div class="driver-row"><i class="fa-solid fa-dharmachakra fa-lg"></i></div>
+            <div class="seat-grid" id="seatGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-overlay d-none" id="statusModal">
+    <div class="booking-card text-center p-4 my-auto" style="max-width: 600px; width: 90%;">
+      
+      <div id="stateWaiting">
+        <div class="spinner-border text-info mb-3" role="status"></div>
+        <h4>Waiting for Admin Confirmation...</h4>
+        <p class="text-muted">Your seat booking request has been sent to Admin <strong>Nagu</strong>. Please wait for verification.</p>
+      </div>
+
+      <div id="stateApproved" class="d-none">
+        <i class="fa-solid fa-circle-check text-success fa-3x mb-3"></i>
+        <h4 class="text-success">Slot Confirmed by Admin!</h4>
+        <p class="text-muted small">The admin has approved your slot request. Proceed to secure payment.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <button class="btn btn-success px-4 rounded-pill" onclick="proceedToPayment()"><i class="fa-solid fa-credit-card me-1"></i> Proceed to Pay</button>
+          <button class="btn btn-outline-danger px-4 rounded-pill" onclick="closeModal()"><i class="fa-solid fa-xmark me-1"></i> Decline</button>
+        </div>
+      </div>
+
+      <div id="statePayment" class="d-none text-start">
+        <h4 class="text-info mb-3"><i class="fa-solid fa-wallet me-2"></i> Secure Payment Gateway</h4>
+        <p class="text-muted small">Choose your payment mode for total fare: <strong id="payModalAmount" class="text-light"></strong></p>
+        
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="payment-option-card active" id="optUpi" onclick="selectPaymentMode('UPI')">
+              <i class="fa-solid fa-mobile-screen-button text-info me-1"></i> UPI / QR Code
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="payment-option-card" id="optCard" onclick="selectPaymentMode('Card')">
+              <i class="fa-solid fa-credit-card text-warning me-1"></i> Credit/Debit Card
+            </div>
+          </div>
+        </div>
+
+        <div id="upiFormBlock">
+          <label class="form-label small text-muted">Enter UPI ID (e.g., user@oksbi)</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-3" id="upiIdInput" value="nagaraj@okhdfcbank">
+        </div>
+
+        <div id="cardFormBlock" class="d-none">
+          <label class="form-label small text-muted">Card Number</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-2" placeholder="4532 •••• •••• 8021" value="4532 8820 9102 8021">
+          <div class="row g-2 mb-3">
+            <div class="col-6"><input type="text" class="form-control bg-dark text-light border-secondary" placeholder="MM/YY" value="09/28"></div>
+            <div class="col-6"><input type="password" class="form-control bg-dark text-light border-secondary" placeholder="CVV" value="382"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-booking w-100" onclick="completePaymentSimulation()">
+          Pay Now & Complete Booking <i class="fa-solid fa-lock ms-1"></i>
+        </button>
+      </div>
+
+      <div id="stateMap" class="d-none text-start">
+        <div class="text-center mb-3">
+          <i class="fa-solid fa-circle-check text-success fa-3x mb-2"></i>
+          <h4 class="text-success">Payment Successful!</h4>
+          <p class="text-muted small">Your ticket is confirmed. Review your live transit map or explore destination accommodations.</p>
+        </div>
+        <h5 class="text-info mb-3"><i class="fa-solid fa-map-location-dot me-2"></i> Live Bus Stops & Reaching Map</h5>
+        <div class="timeline mb-4" id="timelineContainer"></div>
+        
+        <button class="btn btn-booking w-100" onclick="location.href='accommodations.html'">
+          Explore & Book Destination Accommodations <i class="fa-solid fa-hotel ms-2"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const farePerSeat = 650;
+    const busType = sessionStorage.getItem('selectedBusType') || 'AC Sleeper';
+    const routeFrom = sessionStorage.getItem('selectedFrom') || 'Hosur';
+    const routeTo = sessionStorage.getItem('selectedTo') || 'Bangalore';
+
+    document.getElementById('busTitle').innerText = `${busType} Bus Booking`;
+    document.getElementById('fromCity').value = routeFrom;
+    document.getElementById('toCity').value = routeTo;
+
+    let selectedSeats = [];
+    let currentBookingId = null;
+    let selectedPaymentType = 'UPI';
+
+    const travelDateInput = document.getElementById('travelDate');
+    travelDateInput.min = new Date().toISOString().split('T')[0];
+    travelDateInput.value = travelDateInput.min;
+
+    function generateSlots() {
+      const slots = ['06:00 AM Express', '10:30 AM Deluxe', '04:00 PM Superfast', '09:00 PM Night Sleeper'];
+      document.getElementById('timeSlotSelect').innerHTML = slots.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+    generateSlots();
+
+    function renderSeats() {
+      const seatGrid = document.getElementById('seatGrid');
+      seatGrid.innerHTML = '';
+      const bookedList = JSON.parse(localStorage.getItem('gt_booked_seats') || '[3, 7, 12]');
+
+      for (let i = 1; i <= 20; i++) {
+        const seat = document.createElement('div');
+        seat.className = 'seat';
+        seat.innerText = i;
+        if (bookedList.includes(i)) {
+          seat.classList.add('occupied');
+        } else {
+          seat.onclick = () => toggleSeat(i, seat);
+        }
+        seatGrid.appendChild(seat);
+      }
+    }
+    renderSeats();
+
+    function toggleSeat(num, el) {
+      if (selectedSeats.includes(num)) {
+        selectedSeats = selectedSeats.filter(s => s !== num);
+        el.classList.remove('selected');
+      } else {
+        selectedSeats.push(num);
+        el.classList.add('selected');
+      }
+      document.getElementById('displaySeat').innerText = selectedSeats.length ? '#' + selectedSeats.join(', #') : 'None';
+      const total = selectedSeats.length * farePerSeat;
+      document.getElementById('displayFare').innerText = `₹${total}.00`;
+    }
+
+    function submitSlotRequest(e) {
+      e.preventDefault();
+      if (selectedSeats.length === 0) {
+        alert('Please select at least one seat to book.');
+        return;
+      }
+
+      currentBookingId = 'GT-' + Math.floor(100000 + Math.random() * 900000);
+      const totalAmount = selectedSeats.length * farePerSeat;
+
+      const newBooking = {
+        id: currentBookingId,
+        type: 'Bus',
+        passengerName: document.getElementById('passengerName').value,
+        routeName: `${routeFrom} to ${routeTo}`,
+        slotTime: document.getElementById('timeSlotSelect').value,
+        seats: selectedSeats,
+        totalAmount: totalAmount,
+        phone: '+91 98765 43210',
+        status: 'PENDING',
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      let bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+      bookings.push(newBooking);
+      localStorage.setItem('gt_booking_requests', JSON.stringify(bookings));
+
+      document.getElementById('statusModal').classList.remove('d-none');
+      document.getElementById('stateWaiting').classList.remove('d-none');
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateMap').classList.add('d-none');
+
+      pollAdminApproval();
+    }
+
+    let pollInterval = null;
+    function pollAdminApproval() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        const bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+        const current = bookings.find(b => b.id === currentBookingId);
+        if (current && current.status === 'CONFIRMED') {
+          clearInterval(pollInterval);
+          document.getElementById('stateWaiting').classList.add('d-none');
+          document.getElementById('stateApproved').classList.remove('d-none');
+        } else if (current && current.status === 'DECLINED') {
+          clearInterval(pollInterval);
+          alert('Admin declined your booking request.');
+          closeModal();
+        }
+      }, 1500);
+    }
+
+    function proceedToPayment() {
+      const bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+      const current = bookings.find(b => b.id === currentBookingId);
+      document.getElementById('payModalAmount').innerText = `₹${current ? current.totalAmount : 0}.00`;
+      
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.remove('d-none');
+    }
+
+    function selectPaymentMode(mode) {
+      selectedPaymentType = mode;
+      document.getElementById('optUpi').classList.toggle('active', mode === 'UPI');
+      document.getElementById('optCard').classList.toggle('active', mode === 'Card');
+      document.getElementById('upiFormBlock').classList.toggle('d-none', mode !== 'UPI');
+      document.getElementById('cardFormBlock').classList.toggle('d-none', mode !== 'Card');
+    }
+
+    function completePaymentSimulation() {
+      let bookedList = JSON.parse(localStorage.getItem('gt_booked_seats') || '[3, 7, 12]');
+      bookedList = bookedList.concat(selectedSeats);
+      localStorage.setItem('gt_booked_seats', JSON.stringify(bookedList));
+
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateMap').classList.remove('d-none');
+
+      const stops = [
+        { title: `${routeFrom} Terminal`, time: 'Departure: 06:00 AM', status: 'Departed' },
+        { title: 'Attibele Toll Plaza Checkpoint', time: 'Estimated: 06:45 AM', status: 'Crossed' },
+        { title: 'Electronic City Flyover Junction', time: 'Estimated: 07:30 AM', status: 'On Route' },
+        { title: `${routeTo} Central Station`, time: 'Estimated Arrival: 08:30 AM', status: 'Destination' }
+      ];
+
+      document.getElementById('timelineContainer').innerHTML = stops.map(s => `
+        <div class="timeline-item">
+          <h6 class="text-light mb-1">${s.title}</h6>
+          <p class="text-muted small mb-0">${s.time} • <span class="text-info">${s.status}</span></p>
+        </div>
+      `).join('');
+    }
+
+    function closeModal() {
+      if (pollInterval) clearInterval(pollInterval);
+      document.getElementById('statusModal').classList.add('d-none');
+    }
+  </script>
+</body>
+</html>

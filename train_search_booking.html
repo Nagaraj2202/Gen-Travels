@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - All India Train Search & Booking</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --card-bg: rgba(15, 23, 42, 0.82);
+    }
+    body {
+      background-color: var(--primary-color);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      min-height: 100vh;
+    }
+    /* High Clarity Single AI Travel Video Background Styling */
+    .ai-video-bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -99;
+      overflow: hidden;
+      background-color: #0f172a;
+    }
+    .ai-video-bg-container video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      opacity: 0.85;
+    }
+    .ai-video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -98;
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.7));
+      pointer-events: none;
+    }
+    .booking-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .train-option-card {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      margin-bottom: 1rem;
+    }
+    .train-option-card:hover {
+      border-color: var(--accent-color);
+    }
+    .class-price-badge {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .class-price-badge.selected {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #ffffff;
+    }
+    .class-price-badge.selected .text-muted {
+      color: #e2e8f0 !important;
+    }
+    .btn-booking {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+    }
+    .btn-booking:hover {
+      background-color: var(--accent-hover);
+      color: #ffffff;
+    }
+    .status-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .timeline {
+      position: relative;
+      border-left: 3px solid var(--accent-color);
+      margin-left: 20px;
+      padding-left: 20px;
+      text-align: left;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -28px;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+    .payment-option-card {
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .payment-option-card.active {
+      border-color: var(--accent-color);
+      background: rgba(59, 130, 246, 0.15);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ai-video-bg-container" id="videoContainer">
+    <video src="mixkit-rolling-corridor-at-an-airport-4642-4k.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="ai-video-overlay"></div>
+
+  <div class="container py-5">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+      <a href="index.html" class="text-primary text-decoration-none fw-bold"><i class="fa-solid fa-arrow-left me-1"></i> Back to Home</a>
+      <div class="badge bg-dark border border-secondary px-3 py-2 text-light">
+        <i class="fa-solid fa-calendar-days text-primary me-2"></i> IRCTC Live Engine v4.2
+      </div>
+    </div>
+
+    <div class="booking-card mb-4">
+      <h3 class="mb-3"><i class="fa-solid fa-train text-primary me-2"></i> Search All-India Train Routes</h3>
+      <p class="text-muted small mb-4">Select or type origin and destination stations across India to fetch live train schedules and dynamic distance-based fares.</p>
+
+      <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label">From Station / City</label>
+          <input list="indiaStations" class="form-control bg-dark text-light border-secondary" id="fromInput" value="Mumbai, Maharashtra">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">To Destination Station / City</label>
+          <input list="indiaStations" class="form-control bg-dark text-light border-secondary" id="toInput" value="Bangalore, Karnataka">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-booking w-100 py-2" onclick="searchTrains()">Search Trains</button>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="indiaStations">
+      <option value="Mumbai, Maharashtra"></option>
+      <option value="Bangalore, Karnataka"></option>
+      <option value="Chennai, Tamil Nadu"></option>
+      <option value="Delhi, NCR"></option>
+      <option value="Hyderabad, Telangana"></option>
+      <option value="Kolkata, West Bengal"></option>
+      <option value="Pune, Maharashtra"></option>
+      <option value="Ahmedabad, Gujarat"></option>
+      <option value="Coimbatore, Tamil Nadu"></option>
+      <option value="Goa, Panaji"></option>
+      <option value="Jaipur, Rajasthan"></option>
+      <option value="Patna, Bihar"></option>
+    </datalist>
+
+    <div id="trainResultsSection">
+      <h4 class="mb-3 text-light" id="resultsHeading">Available Trains</h4>
+      <div id="trainListContainer"></div>
+    </div>
+  </div>
+
+  <div class="status-overlay d-none" id="statusModal">
+    <div class="booking-card text-center p-4 my-auto" style="max-width: 650px; width: 90%;">
+      
+      <div id="stateBookingForm" class="text-start">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="text-primary mb-0"><i class="fa-solid fa-ticket me-2"></i> Confirm Train Ticket</h4>
+          <button class="btn btn-sm btn-outline-secondary text-light" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="text-muted small mb-3">Booking <strong id="modalTrainName" class="text-light"></strong> from <span id="modalRoute" class="text-light"></span></p>
+
+        <form onsubmit="submitTrainSlotRequest(event)">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Passenger Full Name</label>
+            <input type="text" class="form-control bg-dark text-light border-secondary" id="passengerName" value="Nagaraj" required>
+          </div>
+
+          <label class="form-label small text-muted mb-2">Selected Class & Quota:</label>
+          <div class="row g-2 mb-4" id="modalClassBadges">
+            </div>
+
+          <div class="p-3 mb-3 rounded bg-dark border border-secondary d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 text-muted">Total Fare: <strong id="modalDisplayFare" class="text-warning fs-5">₹0</strong></p>
+            </div>
+            <button type="submit" class="btn btn-booking">
+              SUBMIT FOR ADMIN APPROVAL <i class="fa-solid fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div id="stateWaiting" class="d-none py-4">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <h4>Waiting for Railway Quota Verification...</h4>
+        <p class="text-muted">Your booking request has been sent to Admin <strong>Nagu</strong> for verification.</p>
+      </div>
+
+      <div id="stateApproved" class="d-none py-4">
+        <i class="fa-solid fa-circle-check text-success fa-3x mb-3"></i>
+        <h4 class="text-success">Quota Verified & Approved by Admin!</h4>
+        <p class="text-muted small">Your seat allocation is confirmed. Proceed to complete secure IRCTC payment.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <button class="btn btn-success px-4 rounded-pill" onclick="proceedToPayment()"><i class="fa-solid fa-credit-card me-1"></i> Proceed to Pay</button>
+          <button class="btn btn-outline-danger px-4 rounded-pill" onclick="closeModal()"><i class="fa-solid fa-xmark me-1"></i> Cancel</button>
+        </div>
+      </div>
+
+      <div id="statePayment" class="d-none text-start py-2">
+        <h4 class="text-primary mb-3"><i class="fa-solid fa-wallet me-2"></i> IRCTC Secure Payment Gateway</h4>
+        <p class="text-muted small">Total amount payable: <strong id="payModalAmount" class="text-light"></strong></p>
+        
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="payment-option-card active" id="optUpi" onclick="selectPaymentMode('UPI')">
+              <i class="fa-solid fa-mobile-screen-button text-primary me-1"></i> IRCTC iMudra / UPI
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="payment-option-card" id="optCard" onclick="selectPaymentMode('Card')">
+              <i class="fa-solid fa-credit-card text-warning me-1"></i> NetBanking / Card
+            </div>
+          </div>
+        </div>
+
+        <div id="upiFormBlock">
+          <label class="form-label small text-muted">Enter UPI ID</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-3" value="nagaraj@ybl">
+        </div>
+
+        <div id="cardFormBlock" class="d-none">
+          <label class="form-label small text-muted">Card Number</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary mb-2" value="5240 2210 9012 4410">
+          <div class="row g-2 mb-3">
+            <div class="col-6"><input type="text" class="form-control bg-dark text-light border-secondary" placeholder="MM/YY" value="12/29"></div>
+            <div class="col-6"><input type="password" class="form-control bg-dark text-light border-secondary" placeholder="CVV" value="492"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-booking w-100" onclick="completePaymentSimulation()">
+          Complete Payment & Generate PNR <i class="fa-solid fa-lock ms-1"></i>
+        </button>
+      </div>
+
+      <div id="stateMap" class="d-none text-start py-2">
+        <div class="text-center mb-3">
+          <i class="fa-solid fa-circle-check text-success fa-3x mb-2"></i>
+          <h4 class="text-success">Payment Successful! PNR Generated</h4>
+          <p class="text-muted small">Your tickets are confirmed. Live train tracking path is active below.</p>
+        </div>
+        <h5 class="text-primary mb-3"><i class="fa-solid fa-train-subway me-2"></i> Live Train Station Stops & Map</h5>
+        <div class="timeline mb-4" id="trainTimelineContainer"></div>
+        
+        <button class="btn btn-booking w-100" onclick="location.href='accommodations.html'">
+          Explore & Book Destination Accommodations <i class="fa-solid fa-hotel ms-2"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let activeTrainObj = null;
+    let selectedClassType = '3A';
+    let selectedFare = 1500;
+    let currentBookingId = null;
+    let pollInterval = null;
+
+    function calculateDistance(fromStr, toStr) {
+      if (fromStr === toStr) return 50;
+      const combined = (fromStr + toStr).toLowerCase();
+      if (combined.includes('mumbai') && combined.includes('bangalore')) return 980;
+      if (combined.includes('chennai') && combined.includes('bangalore')) return 350;
+      if (combined.includes('delhi') && combined.includes('mumbai')) return 1400;
+      
+      let hash = 0;
+      for (let i = 0; i < combined.length; i++) {
+        hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return Math.abs(hash % 900) + 200;
+    }
+
+    function searchTrains() {
+      const fromVal = document.getElementById('fromInput').value.trim();
+      const toVal = document.getElementById('toInput').value.trim();
+
+      if (!fromVal || !toVal) {
+        alert('Please specify both departure and arrival stations.');
+        return;
+      }
+
+      const dist = calculateDistance(fromVal, toVal);
+      document.getElementById('resultsHeading').innerText = `Trains from ${fromVal} to ${toVal} (~${dist} km)`;
+
+      // Generate dynamic train schedules based on distance
+      const trains = [
+        {
+          number: '12368',
+          name: 'Express Superfast',
+          departure: '06:30 AM',
+          arrival: '22:15 PM',
+          duration: Math.round(dist / 65) + 'h 30m',
+          classes: {
+            '3A': Math.round(dist * 1.6),
+            '2A': Math.round(dist * 2.3),
+            'SL': Math.round(dist * 0.6)
+          }
+        },
+        {
+          number: '20608',
+          name: 'Vande Bharat Express',
+          departure: '14:00 PM',
+          arrival: '21:30 PM',
+          duration: Math.round(dist / 95) + 'h 15m',
+          classes: {
+            '3A': Math.round(dist * 2.1),
+            '2A': Math.round(dist * 3.0),
+            'SL': Math.round(dist * 0.9)
+          }
+        },
+        {
+          number: '16528',
+          name: 'Night Mail Express',
+          departure: '21:15 PM',
+          arrival: '13:00 PM (+1d)',
+          duration: Math.round(dist / 60) + 'h 45m',
+          classes: {
+            '3A': Math.round(dist * 1.4),
+            '2A': Math.round(dist * 2.0),
+            'SL': Math.round(dist * 0.5)
+          }
+        }
+      ];
+
+      const container = document.getElementById('trainListContainer');
+      container.innerHTML = trains.map((t, idx) => `
+        <div class="train-option-card">
+          <div class="row align-items-center">
+            <div class="col-md-5">
+              <h5 class="mb-1 text-light"><span class="text-primary">${t.number}</span> ${t.name}</h5>
+              <small class="text-muted"><i class="fa-solid fa-clock me-1"></i> ${t.departure} &rarr; ${t.arrival} &bull; Duration: ${t.duration}</small>
+            </div>
+            <div class="col-md-5">
+              <div class="row g-2">
+                <div class="col-4">
+                  <div class="class-price-badge ${idx===0?'selected':''}" onclick="selectTrainModal('${t.number}', '${t.name}', '3A', ${t.classes['3A']}, this)">
+                    <div style="font-size:0.8rem;"><strong>3A</strong> ₹${t.classes['3A']}</div>
+                    <div class="text-success x-small" style="font-size:0.65rem;">Guarantee</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="class-price-badge" onclick="selectTrainModal('${t.number}', '${t.name}', '2A', ${t.classes['2A']}, this)">
+                    <div style="font-size:0.8rem;"><strong>2A</strong> ₹${t.classes['2A']}</div>
+                    <div class="text-success x-small" style="font-size:0.65rem;">Available</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="class-price-badge" onclick="selectTrainModal('${t.number}', '${t.name}', 'SL', ${t.classes['SL']}, this)">
+                    <div style="font-size:0.8rem;"><strong>SL</strong> ₹${t.classes['SL']}</div>
+                    <div class="text-warning x-small" style="font-size:0.65rem;">RAC 14</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2 text-end mt-2 mt-md-0">
+              <button class="btn btn-sm btn-booking w-100" onclick="openBookingModal('${t.number}', '${t.name}')">Book Now</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Auto-select first train default
+      activeTrainObj = { number: trains[0].number, name: trains[0].name, classes: trains[0].classes };
+      selectedClassType = '3A';
+      selectedFare = trains[0].classes['3A'];
+    }
+
+    function selectTrainModal(num, name, cls, price, el) {
+      activeTrainObj = { number: num, name: name };
+      selectedClassType = cls;
+      selectedFare = price;
+      
+      // highlight corresponding badges across cards if desired
+      document.querySelectorAll('.class-price-badge').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function openBookingModal(num, name) {
+      activeTrainObj = activeTrainObj || { number: num, name: name, classes: {'3A': selectedFare} };
+      
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      document.getElementById('modalTrainName').innerText = `${activeTrainObj.number} ${activeTrainObj.name}`;
+      document.getElementById('modalRoute').innerText = `${fromVal} to ${toVal}`;
+      document.getElementById('modalDisplayFare').innerText = `₹${selectedFare.toLocaleString()}`;
+
+      // Populate modal class options
+      document.getElementById('modalClassBadges').innerHTML = `
+        <div class="col-4">
+          <div class="class-price-badge ${selectedClassType==='3A'?'selected':''}" onclick="setModalClass('3A', ${selectedFare}, this)">
+            <strong>3A</strong><div class="text-muted small">₹${selectedFare}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="class-price-badge ${selectedClassType==='2A'?'selected':''}" onclick="setModalClass('2A', ${Math.round(selectedFare*1.4)}, this)">
+            <strong>2A</strong><div class="text-muted small">₹${Math.round(selectedFare*1.4)}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="class-price-badge ${selectedClassType==='SL'?'selected':''}" onclick="setModalClass('SL', Math.round(selectedFare*0.4), this)">
+            <strong>SL</strong><div class="text-muted small">₹${Math.round(selectedFare*0.4)}</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('statusModal').classList.remove('d-none');
+      document.getElementById('stateBookingForm').classList.remove('d-none');
+      document.getElementById('stateWaiting').classList.add('d-none');
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateMap').classList.add('d-none');
+    }
+
+    function setModalClass(cls, price, el) {
+      document.querySelectorAll('#modalClassBadges .class-price-badge').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedClassType = cls;
+      selectedFare = price;
+      document.getElementById('modalDisplayFare').innerText = `₹${price.toLocaleString()}`;
+    }
+
+    function submitTrainSlotRequest(e) {
+      e.preventDefault();
+      currentBookingId = 'TRN-' + Math.floor(100000 + Math.random() * 900000);
+
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      const newBooking = {
+        id: currentBookingId,
+        type: 'Train',
+        passengerName: document.getElementById('passengerName').value,
+        routeName: `${fromVal} to ${toVal}`,
+        slotTime: `Departure (${selectedClassType})`,
+        seats: ['Coach B1 - Berth 21 (Confirmed)'],
+        totalAmount: selectedFare,
+        phone: '+91 98765 43210',
+        status: 'PENDING',
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      let bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+      bookings.push(newBooking);
+      localStorage.setItem('gt_booking_requests', JSON.stringify(bookings));
+
+      document.getElementById('stateBookingForm').classList.add('d-none');
+      document.getElementById('stateWaiting').classList.remove('d-none');
+
+      pollAdminApproval();
+    }
+
+    function pollAdminApproval() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        const bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+        const current = bookings.find(b => b.id === currentBookingId);
+        if (current && current.status === 'CONFIRMED') {
+          clearInterval(pollInterval);
+          document.getElementById('stateWaiting').classList.add('d-none');
+          document.getElementById('stateApproved').classList.remove('d-none');
+        } else if (current && current.status === 'DECLINED') {
+          clearInterval(pollInterval);
+          alert('Admin declined your ticket request.');
+          closeModal();
+        }
+      }, 1500);
+    }
+
+    function proceedToPayment() {
+      document.getElementById('payModalAmount').innerText = `₹${selectedFare.toLocaleString()}.00`;
+      document.getElementById('stateApproved').classList.add('d-none');
+      document.getElementById('statePayment').classList.remove('d-none');
+    }
+
+    function selectPaymentMode(mode) {
+      document.getElementById('optUpi').classList.toggle('active', mode === 'UPI');
+      document.getElementById('optCard').classList.toggle('active', mode === 'Card');
+      document.getElementById('upiFormBlock').classList.toggle('d-none', mode !== 'UPI');
+      document.getElementById('cardFormBlock').classList.toggle('d-none', mode !== 'Card');
+    }
+
+    function completePaymentSimulation() {
+      document.getElementById('statePayment').classList.add('d-none');
+      document.getElementById('stateMap').classList.remove('d-none');
+
+      const fromVal = document.getElementById('fromInput').value;
+      const toVal = document.getElementById('toInput').value;
+
+      const stops = [
+        { title: `${fromVal} Origin Station`, time: 'Departure: On Time', status: 'Departed' },
+        { title: 'Intermediate Sub-Junction', time: 'Estimated: 4h 20m', status: 'Crossed' },
+        { title: 'Technical Transit Halt', time: 'Estimated: 9h 10m', status: 'On Route' },
+        { title: `${toVal} Terminal Destination`, time: 'Estimated Arrival', status: 'Destination' }
+      ];
+
+      document.getElementById('trainTimelineContainer').innerHTML = stops.map(s => `
+        <div class="timeline-item">
+          <h6 class="text-light mb-1">${s.title}</h6>
+          <p class="text-muted small mb-0">${s.time} • <span class="text-primary">${s.status}</span></p>
+        </div>
+      `).join('');
+    }
+
+    function closeModal() {
+      if (pollInterval) clearInterval(pollInterval);
+      document.getElementById('statusModal').classList.add('d-none');
+    }
+
+    // Trigger initial search on load
+    searchTrains();
+  </script>
+</body>
+</html>

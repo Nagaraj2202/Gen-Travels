@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* High Clarity Single AI Travel Video Background Styling */
+    .ai-video-bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -99;
+      overflow: hidden;
+      background-color: #0f172a;
+    }
+    .ai-video-bg-container video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      opacity: 0.85; /* Increased video clarity & brightness */
+    }
+    /* Lighter gradient overlay for vibrant color and contrast */
+    .ai-video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -98;
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.5));
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="index-body">
+
+  <!-- Single High-Clarity AI Generated Background Video Container -->
+  <div class="ai-video-bg-container" id="videoContainer">
+    <video src="mixkit-rolling-corridor-at-an-airport-4642-4k.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="ai-video-overlay"></div>
+
+  <nav class="navbar navbar-expand-lg top-nav">
+    <div class="container-fluid justify-content-end">
+      <ul class="navbar-nav gap-3">
+        <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="pages/creation.html">Creation</a></li>
+        <li class="nav-item"><a class="nav-link" href="design.html">Designs</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin.html">Admin</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="swipe-container" id="swipeArea">
+    <div class="hero-content text-center">
+      <h1 class="brand-title">GEN TRAVELS</h1>
+      <p class="tagline">Explore Beyond Boundaries</p>
+    </div>
+
+    <div class="swipe-up-trigger text-center" id="swipeBtn">
+      <p class="mb-1">SWIPE UP TO EXPLORE</p>
+      <i class="fa-solid fa-chevron-up bounce-icon"></i>
+    </div>
+  </main>
+
+  <section class="explore-section hidden" id="exploreSection">
+    <div class="container py-5 text-center">
+      <h2>Your Journey Begins Here</h2>
+      <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828" alt="Travel Destination" class="img-fluid rounded shadow-lg my-4 reveal-img">
+      <div class="swipe-down-trigger" id="swipeDownBtn">
+        <i class="fa-solid fa-chevron-down bounce-icon"></i>
+        <p>SWIPE DOWN TO CLOSE</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer-bottom py-3 text-center">
+    <div class="social-icons d-flex justify-content-center gap-4">
+      <a href="https://github.com" target="_blank" aria-label="GitHub"><i class="fa-brands fa-github fa-2x"></i></a>
+      <a href="https://instagram.com" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram fa-2x"></i></a>
+      <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn"><i class="fa-brands fa-linkedin fa-2x"></i></a>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - Central Admin System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-bg: #0f172a;
+      --sidebar-bg: #1e293b;
+      --accent-color: #06b6d4;
+      --accent-hover: #0891b2;
+      --card-bg: rgba(255, 255, 255, 0.05);
+    }
+    body {
+      background-color: var(--primary-bg);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .login-card {
+      background: var(--sidebar-bg);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+    .login-icon {
+      width: 70px;
+      height: 70px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 2px solid var(--accent-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem auto;
+      font-size: 2rem;
+      color: var(--accent-color);
+    }
+    .form-control {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+    }
+    .form-control:focus {
+      background-color: #0f172a;
+      border-color: var(--accent-color);
+      color: #f8fafc;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    }
+    .btn-login {
+      background-color: var(--accent-color);
+      color: #0f172a;
+      font-weight: 700;
+      padding: 0.75rem;
+      border-radius: 10px;
+      border: none;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+    .btn-login:hover {
+      background-color: var(--accent-hover);
+      color: #ffffff;
+    }
+    .admin-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+    .admin-sidebar {
+      width: 260px;
+      background-color: var(--sidebar-bg);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem 1rem;
+      flex-shrink: 0;
+    }
+    .sidebar-brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: #94a3b8;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+      background-color: var(--accent-color);
+      color: #0f172a;
+    }
+    .admin-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+    .data-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .stat-card {
+      background: var(--sidebar-bg);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+    .table-dark-custom {
+      --bs-table-bg: transparent;
+      --bs-table-color: #f8fafc;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .table-dark-custom th {
+      color: var(--accent-color);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-container">
+    <div class="login-card">
+      <div class="text-center">
+        <div class="login-icon">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h4 class="text-light fw-bold mb-1">GEN TRAVELS</h4>
+        <p class="text-muted small mb-4">Admin Authentication Gateway</p>
+      </div>
+
+      <div class="alert alert-danger d-none py-2 px-3 small" id="errorAlert" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-1"></i> Invalid Admin Name or Password!
+      </div>
+
+      <form id="adminLoginForm" onsubmit="handleLogin(event)">
+        <div class="mb-3">
+          <label for="adminUsername" class="form-label text-muted small fw-bold">ADMIN NAME</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-info"><i class="fa-solid fa-user"></i></span>
+            <input type="text" class="form-control" id="adminUsername" placeholder="Enter admin name" required>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="adminPassword" class="form-label text-muted small fw-bold">PASSWORD</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-info"><i class="fa-solid fa-lock"></i></span>
+            <input type="password" class="form-control" id="adminPassword" placeholder="Enter password" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-login">
+          Login to Dashboard <i class="fa-solid fa-arrow-right-to-bracket ms-2"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD -->
+  <div id="dashboardScreen" class="admin-wrapper d-none">
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-user-shield"></i>
+        <span>GEN Admin Portal</span>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a class="sidebar-link active" id="nav-ALL" onclick="filterByMode('ALL', this)"><i class="fa-solid fa-list"></i><span>All Bookings</span></a></li>
+        <li><a class="sidebar-link" id="nav-Bus" onclick="filterByMode('Bus', this)"><i class="fa-solid fa-bus"></i><span>Bus Slots</span></a></li>
+        <li><a class="sidebar-link" id="nav-Train" onclick="filterByMode('Train', this)"><i class="fa-solid fa-train"></i><span>Train Slots</span></a></li>
+        <li><a class="sidebar-link" id="nav-Flight" onclick="filterByMode('Flight', this)"><i class="fa-solid fa-plane"></i><span>Flight Slots</span></a></li>
+        <li><a class="sidebar-link" id="nav-Ship" onclick="filterByMode('Ship', this)"><i class="fa-solid fa-ship"></i><span>Ship / Cruise Slots</span></a></li>
+      </ul>
+
+      <div class="mt-5 pt-4 border-top border-secondary">
+        <button class="btn btn-outline-danger btn-sm w-100" onclick="logoutAdmin()">
+          <i class="fa-solid fa-right-from-bracket me-1"></i> Logout Admin
+        </button>
+      </div>
+    </aside>
+
+    <main class="admin-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 class="text-light mb-1" id="pageTitle"><i class="fa-solid fa-list-check text-info me-2"></i>All Booking Slots</h3>
+          <p class="text-muted small mb-0">Active Admin: <strong class="text-info" id="activeAdminLabel">Nagu</strong> | Filter: <span class="badge bg-secondary" id="activeDateFilterLabel">All Time</span></p>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-outline-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-rotate-right me-1"></i> Refresh & Filter Data
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark">
+            <li><a class="dropdown-item" href="#" onclick="setRefreshDateFilter('ALL')"><i class="fa-solid fa-globe me-2 text-info"></i>All Time (Refresh)</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" onclick="setRefreshDateFilter('TODAY')"><i class="fa-solid fa-calendar-day me-2 text-success"></i>Today</a></li>
+            <li><a class="dropdown-item" href="#" onclick="setRefreshDateFilter('TOMORROW')"><i class="fa-solid fa-calendar-plus me-2 text-warning"></i>Tomorrow</a></li>
+            <li><a class="dropdown-item" href="#" onclick="setRefreshDateFilter('YESTERDAY')"><i class="fa-solid fa-calendar-minus me-2 text-secondary"></i>Yesterday</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Metrics Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="stat-card" onclick="filterByMode('Bus')"><small class="text-muted d-block"><i class="fa-solid fa-bus text-info me-1"></i> Bus Slots</small><h3 class="text-info mb-0" id="statBus">0</h3></div></div>
+        <div class="col-md-3"><div class="stat-card" onclick="filterByMode('Train')"><small class="text-muted d-block"><i class="fa-solid fa-train text-warning me-1"></i> Train Slots</small><h3 class="text-warning mb-0" id="statTrain">0</h3></div></div>
+        <div class="col-md-3"><div class="stat-card" onclick="filterByMode('Flight')"><small class="text-muted d-block"><i class="fa-solid fa-plane text-success me-1"></i> Flight Slots</small><h3 class="text-success mb-0" id="statFlight">0</h3></div></div>
+        <div class="col-md-3"><div class="stat-card" onclick="filterByMode('Ship')"><small class="text-muted d-block"><i class="fa-solid fa-ship text-primary me-1"></i> Ship Slots</small><h3 class="text-primary mb-0" id="statShip">0</h3></div></div>
+      </div>
+
+      <!-- Status Breakdown -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="p-3 bg-dark border border-success rounded d-flex justify-content-between align-items-center"><div><small class="text-success fw-bold">CONFIRMED</small><h4 class="text-light mb-0" id="countConfirmed">0</h4></div><i class="fa-solid fa-circle-check text-success fa-2x"></i></div></div>
+        <div class="col-md-4"><div class="p-3 bg-dark border border-warning rounded d-flex justify-content-between align-items-center"><div><small class="text-warning fw-bold">PENDING</small><h4 class="text-light mb-0" id="countPending">0</h4></div><i class="fa-solid fa-clock text-warning fa-2x"></i></div></div>
+        <div class="col-md-4"><div class="p-3 bg-dark border border-danger rounded d-flex justify-content-between align-items-center"><div><small class="text-danger fw-bold">DECLINED</small><h4 class="text-light mb-0" id="countDeclined">0</h4></div><i class="fa-solid fa-circle-xmark text-danger fa-2x"></i></div></div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="data-card">
+        <div class="table-responsive">
+          <table class="table table-dark-custom align-middle">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Mode</th>
+                <th>Passenger</th>
+                <th>Route / Details</th>
+                <th>Seats</th>
+                <th>Contact</th>
+                <th>Fare</th>
+                <th>Status / Actions</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="bookingSlotsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bootstrap JS bundle for dropdown -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const ADMIN_USER = "Nagu";
+    const ADMIN_PASS = "Nagu8021";
+    let activeFilterMode = 'ALL';
+    let activeDateFilter = 'ALL';
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const userVal = document.getElementById('adminUsername').value.trim();
+      const passVal = document.getElementById('adminPassword').value.trim();
+      const alertBox = document.getElementById('errorAlert');
+
+      if (userVal === ADMIN_USER && passVal === ADMIN_PASS) {
+        alertBox.classList.add('d-none');
+        sessionStorage.setItem('isAdminAuthenticated', 'true');
+        sessionStorage.setItem('adminUser', ADMIN_USER);
+        checkAuthAndRender();
+      } else {
+        alertBox.classList.remove('d-none');
+      }
+    }
+
+    function logoutAdmin() {
+      sessionStorage.clear();
+      checkAuthAndRender();
+    }
+
+    function checkAuthAndRender() {
+      const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated') === 'true';
+      document.getElementById('loginScreen').classList.toggle('d-none', isAuthenticated);
+      document.getElementById('dashboardScreen').classList.toggle('d-none', !isAuthenticated);
+      if (isAuthenticated) {
+        document.getElementById('activeAdminLabel').innerText = sessionStorage.getItem('adminUser') || 'Nagu';
+        loadConfirmedSlots();
+      }
+    }
+
+    function getModeBadge(type) {
+      const mode = (type || 'Bus').toLowerCase();
+      if (mode.includes('train')) return `<span class="badge bg-warning text-dark"><i class="fa-solid fa-train me-1"></i>Train</span>`;
+      if (mode.includes('flight') || mode.includes('plane')) return `<span class="badge bg-info text-dark"><i class="fa-solid fa-plane me-1"></i>Flight</span>`;
+      if (mode.includes('ship') || mode.includes('cruise')) return `<span class="badge bg-primary"><i class="fa-solid fa-ship me-1"></i>Ship</span>`;
+      return `<span class="badge bg-success"><i class="fa-solid fa-bus me-1"></i>Bus</span>`;
+    }
+
+    function setRefreshDateFilter(filterType) {
+      activeDateFilter = filterType;
+      const labelMap = { 'ALL': 'All Time', 'TODAY': 'Today', 'TOMORROW': 'Tomorrow', 'YESTERDAY': 'Yesterday' };
+      document.getElementById('activeDateFilterLabel').innerText = labelMap[filterType] || 'All Time';
+      loadConfirmedSlots();
+    }
+
+    function loadConfirmedSlots() {
+      const tbody = document.getElementById('bookingSlotsTableBody');
+      const bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+
+      // Calculate date comparison strings (YYYY-MM-DD format)
+      const now = new Date();
+      const formatDateStr = (d) => d.toISOString().split('T')[0];
+      const todayStr = formatDateStr(now);
+      
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(now.getDate() + 1);
+      const tomorrowStr = formatDateStr(tomorrowDate);
+
+      const yesterdayDate = new Date();
+      yesterdayDate.setDate(now.getDate() - 1);
+      const yesterdayStr = formatDateStr(yesterdayDate);
+
+      let busCount = 0, trainCount = 0, flightCount = 0, shipCount = 0;
+      let confirmed = 0, pending = 0, declined = 0;
+
+      // Filter by Date first
+      const dateFiltered = bookings.filter(b => {
+        const itemDate = b.travelDate || b.date || todayStr; // fallback to today if missing
+        if (activeDateFilter === 'TODAY') return itemDate === todayStr;
+        if (activeDateFilter === 'TOMORROW') return itemDate === tomorrowStr;
+        if (activeDateFilter === 'YESTERDAY') return itemDate === yesterdayStr;
+        return true; // ALL
+      });
+
+      dateFiltered.forEach(b => {
+        const mode = (b.type || 'Bus').toLowerCase();
+        if (mode.includes('bus')) busCount++;
+        else if (mode.includes('train')) trainCount++;
+        else if (mode.includes('flight')) flightCount++;
+        else if (mode.includes('ship') || mode.includes('cruise')) shipCount++;
+      });
+
+      document.getElementById('statBus').innerText = busCount;
+      document.getElementById('statTrain').innerText = trainCount;
+      document.getElementById('statFlight').innerText = flightCount;
+      document.getElementById('statShip').innerText = shipCount;
+
+      const filtered = dateFiltered.filter(b => {
+        if (activeFilterMode === 'ALL') return true;
+        const mode = (b.type || '').toLowerCase();
+        if (activeFilterMode === 'Flight') return mode.includes('flight') || mode.includes('plane');
+        if (activeFilterMode === 'Ship') return mode.includes('ship') || mode.includes('cruise');
+        return mode.includes(activeFilterMode.toLowerCase());
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4"><i class="fa-solid fa-folder-open fa-2x mb-2 d-block"></i>No booking requests found for this filter.</td></tr>`;
+        document.getElementById('countConfirmed').innerText = '0';
+        document.getElementById('countPending').innerText = '0';
+        document.getElementById('countDeclined').innerText = '0';
+        return;
+      }
+
+      tbody.innerHTML = filtered.slice().reverse().map(b => {
+        const statusStr = (b.status || 'PENDING').toUpperCase();
+        if (statusStr === 'CONFIRMED') confirmed++;
+        else if (statusStr === 'PENDING') pending++;
+        else if (statusStr === 'REJECTED' || statusStr === 'DECLINED') declined++;
+
+        let actionButtonsHtml = '';
+        if (statusStr === 'PENDING') {
+          actionButtonsHtml = `
+            <div class="d-flex gap-1 mt-1">
+              <button class="btn btn-success btn-sm py-0 px-2" onclick="updateBookingStatus('${b.id}', 'CONFIRMED')"><i class="fa-solid fa-check"></i></button>
+              <button class="btn btn-danger btn-sm py-0 px-2" onclick="updateBookingStatus('${b.id}', 'DECLINED')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          `;
+        }
+
+        const statusBadge = statusStr === 'CONFIRMED' ? `<span class="badge bg-success">CONFIRMED</span>` :
+                            statusStr === 'PENDING' ? `<span class="badge bg-warning text-dark">PENDING</span>` :
+                            `<span class="badge bg-danger">DECLINED</span>`;
+
+        return `
+          <tr>
+            <td><strong class="text-info">${b.id}</strong></td>
+            <td>${getModeBadge(b.type)}</td>
+            <td><div class="fw-bold text-light"><i class="fa-solid fa-user me-1 text-info"></i>${b.passengerName || 'Nagaraj'}</div></td>
+            <td><div class="fw-bold">${b.routeName || 'Express Route'}</div><small class="text-muted">${b.slotTime || 'Regular'}</small></td>
+            <td><span class="badge bg-dark border border-secondary text-light">Seats #${(b.seats || []).join(', #')}</span></td>
+            <td><div class="small">${b.phone || '+91 80 4252 1000'}</div></td>
+            <td class="text-success fw-bold">₹${b.totalAmount || 0}</td>
+            <td>${statusBadge} ${actionButtonsHtml}</td>
+            <td><small class="text-muted">${b.timestamp || 'Just now'} (${b.travelDate || 'Today'})</small></td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('countConfirmed').innerText = confirmed;
+      document.getElementById('countPending').innerText = pending;
+      document.getElementById('countDeclined').innerText = declined;
+    }
+
+    function updateBookingStatus(id, newStatus) {
+      let bookings = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+      bookings = bookings.map(b => {
+        if (b.id === id) {
+          b.status = newStatus;
+        }
+        return b;
+      });
+      localStorage.setItem('gt_booking_requests', JSON.stringify(bookings));
+      loadConfirmedSlots();
+    }
+
+    function filterByMode(mode) {
+      activeFilterMode = mode;
+      document.getElementById('pageTitle').innerHTML = `<i class="fa-solid fa-list-check text-info me-2"></i>${mode === 'ALL' ? 'All Booking Slots' : mode + ' Booking Slots'}`;
+      document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+      const activeNav = document.getElementById('nav-' + mode);
+      if (activeNav) activeNav.classList.add('active');
+      loadConfirmedSlots();
+    }
+
+    document.addEventListener('DOMContentLoaded', checkAuthAndRender);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'gt_booking_requests' && sessionStorage.getItem('isAdminAuthenticated') === 'true') {
+        loadConfirmedSlots();
+      }
+    });
+  </script>
+</body>
+</html>

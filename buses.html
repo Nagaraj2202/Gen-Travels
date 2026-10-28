@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - Search All India Routes</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --accent-color: #06b6d4;
+      --card-bg: rgba(15, 23, 42, 0.78);
+    }
+    body {
+      background-color: var(--primary-color);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      min-height: 100vh;
+    }
+    /* High Clarity Single AI Travel Video Background Styling */
+    .ai-video-bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -99;
+      overflow: hidden;
+      background-color: #0f172a;
+    }
+    .ai-video-bg-container video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      opacity: 0.85;
+    }
+    .ai-video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -98;
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.6));
+      pointer-events: none;
+    }
+    .bus-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .bus-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-color);
+    }
+    .btn-booking {
+      background-color: var(--accent-color);
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      border-radius: 20px;
+      padding: 0.5rem 1.5rem;
+      transition: all 0.2s ease;
+    }
+    .btn-booking:hover {
+      background-color: #0891b2;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ai-video-bg-container" id="videoContainer">
+    <video src="mixkit-atop-the-city-of-tokyo-at-night-4455-full-hd.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="ai-video-overlay"></div>
+
+  <div class="container py-5">
+    <div class="mb-3">
+      <a href="index.html" class="text-info text-decoration-none fw-bold"><i class="fa-solid fa-arrow-left me-1"></i> Back to Home</a>
+    </div>
+
+    <h2 class="mb-4 text-center"><i class="fa-solid fa-bus text-info me-2"></i> Search India Express Buses</h2>
+    
+    <div class="bus-card mb-5">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label">From City / Station</label>
+          <input list="indiaCities" class="form-control bg-dark text-light border-secondary" id="fromInput" value="Hosur, Tamil Nadu" placeholder="Type city or state...">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">To City / Station</label>
+          <input list="indiaCities" class="form-control bg-dark text-light border-secondary" id="toInput" value="Bangalore, Karnataka" placeholder="Type city or state...">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-booking w-100" onclick="updateBusFares()">Search Route</button>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="indiaCities">
+      <option value="Hosur, Tamil Nadu"></option>
+      <option value="Coimbatore, Tamil Nadu"></option>
+      <option value="Ooty, Tamil Nadu"></option>
+      <option value="Chennai, Tamil Nadu"></option>
+      <option value="Madurai, Tamil Nadu"></option>
+      <option value="Salem, Tamil Nadu"></option>
+      <option value="Trichy, Tamil Nadu"></option>
+      <option value="Bangalore, Karnataka"></option>
+      <option value="Mysore, Karnataka"></option>
+      <option value="Mangalore, Karnataka"></option>
+      <option value="Hubli, Karnataka"></option>
+      <option value="Kochi, Kerala"></option>
+      <option value="Trivandrum, Kerala"></option>
+      <option value="Kozhikode, Kerala"></option>
+      <option value="Munnar, Kerala"></option>
+      <option value="Hyderabad, Telangana"></option>
+      <option value="Vijayawada, Andhra Pradesh"></option>
+      <option value="Visakhapatnam, Andhra Pradesh"></option>
+      <option value="Mumbai, Maharashtra"></option>
+      <option value="Pune, Maharashtra"></option>
+      <option value="Panaji, Goa"></option>
+      <option value="Delhi, NCR"></option>
+      <option value="Agra, Uttar Pradesh"></option>
+      <option value="Jaipur, Rajasthan"></option>
+      <option value="Kolkata, West Bengal"></option>
+    </datalist>
+
+    <div class="row g-4" id="busList"></div>
+  </div>
+
+  <script>
+    function calculateDistance(fromStr, toStr) {
+      if (fromStr === toStr) return 0;
+      const combined = (fromStr + toStr).toLowerCase();
+      
+      // Known specific routes
+      if (combined.includes('hosur') && combined.includes('bangalore')) return 40;
+      if (combined.includes('coimbatore') && combined.includes('ooty')) return 85;
+      if (combined.includes('chennai') && combined.includes('bangalore')) return 350;
+      if (combined.includes('mumbai') && combined.includes('pune')) return 150;
+      
+      // Dynamic hash fallback calculation up to ~800km
+      let hash = 0;
+      for (let i = 0; i < combined.length; i++) {
+        hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return Math.abs(hash % 750) + 50;
+    }
+
+    function updateBusFares() {
+      const fromVal = document.getElementById('fromInput').value.trim();
+      const toVal = document.getElementById('toInput').value.trim();
+      
+      if (!fromVal || !toVal) {
+        alert('Please enter both departure and destination locations.');
+        return;
+      }
+
+      const dist = calculateDistance(fromVal, toVal);
+      
+      // Dynamic Fare Calculation
+      let nonAcPrice = Math.round(dist * 1.625); 
+      if (dist === 40) nonAcPrice = 65; 
+
+      let acPrice = Math.round(nonAcPrice * 1.8);
+      
+      // Price Capping Up to ₹5,000
+      nonAcPrice = Math.min(nonAcPrice, 3500);
+      acPrice = Math.min(acPrice, 5000);
+
+      const busListHtml = `
+        <div class="col-md-6">
+          <div class="bus-card d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-secondary mb-2">NON-AC Express</span>
+              <h5>Standard Seater (NON-AC)</h5>
+              <p class="text-muted mb-0"><i class="fa-solid fa-route text-info me-1"></i> Distance: ~${dist} km</p>
+              <h4 class="text-info mt-2">₹${nonAcPrice} <small class="fs-6 text-muted">/ seat</small></h4>
+            </div>
+            <button class="btn btn-booking" onclick="selectBus('NON-AC', ${nonAcPrice}, ${dist}, '${fromVal}', '${toVal}')">Select Seats <i class="fa-solid fa-arrow-right ms-1"></i></button>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="bus-card d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-info text-dark mb-2">AC Luxury Sleeper</span>
+              <h5>Volvo Multi-Axle (AC)</h5>
+              <p class="text-muted mb-0"><i class="fa-solid fa-route text-info me-1"></i> Distance: ~${dist} km</p>
+              <h4 class="text-info mt-2">₹${acPrice} <small class="fs-6 text-muted">/ seat</small></h4>
+            </div>
+            <button class="btn btn-booking" onclick="selectBus('AC', ${acPrice}, ${dist}, '${fromVal}', '${toVal}')">Select Seats <i class="fa-solid fa-arrow-right ms-1"></i></button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('busList').innerHTML = busListHtml;
+    }
+
+    function selectBus(type, price, distance, fromLoc, toLoc) {
+      sessionStorage.setItem('selectedBusType', type);
+      sessionStorage.setItem('selectedFarePerSeat', price);
+      sessionStorage.setItem('selectedDistance', distance);
+      sessionStorage.setItem('selectedFrom', fromLoc);
+      sessionStorage.setItem('selectedTo', toLoc);
+
+      window.location.href = 'bus-booking.html';
+    }
+
+    updateBusFares();
+  </script>
+</body>
+</html>

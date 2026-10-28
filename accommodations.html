@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEN TRAVELS - Accommodations & AI Assistant</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- OrbitControls for Mouse Interactive 3D Orbiting & Deep Zooming -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root {
+      --primary-bg: #0f172a;
+      --accent-color: #06b6d4;
+      --accent-hover: #0891b2;
+      --card-bg: rgba(255, 255, 255, 0.07);
+    }
+    body {
+      background-color: var(--primary-bg);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .booking-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.2rem;
+      transition: all 0.2s ease;
+    }
+    .booking-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-color);
+    }
+    .btn-booking {
+      background-color: var(--accent-color);
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+    }
+    .btn-booking:hover {
+      background-color: var(--accent-hover);
+      color: #ffffff;
+    }
+    .ad-sidebar {
+      position: fixed;
+      right: 20px;
+      bottom: 90px;
+      width: 270px;
+      background: #1e293b;
+      border: 2px solid var(--accent-color);
+      border-radius: 12px;
+      padding: 12px;
+      z-index: 998;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .ad-close-btn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .status-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1050;
+      overflow-y: auto;
+    }
+    /* Floating AI Chatbot Icon & Window */
+    .chat-toggle-btn {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+      z-index: 1000;
+    }
+    .chat-box-container {
+      position: fixed;
+      left: 20px;
+      bottom: 90px;
+      width: 350px;
+      height: 450px;
+      background: #1e293b;
+      border: 1px solid var(--accent-color);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    .chat-header {
+      background: var(--accent-color);
+      color: #0f172a;
+      padding: 12px;
+      font-weight: bold;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+    }
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    .chat-msg {
+      margin-bottom: 10px;
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+    }
+    .chat-msg.bot {
+      background: #334155;
+      color: #f8fafc;
+      align-self: flex-start;
+    }
+    .chat-msg.user {
+      background: var(--accent-color);
+      color: #0f172a;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+    #threeCanvas {
+      width: 100%;
+      height: 320px;
+      border-radius: 12px;
+      background: #000;
+      cursor: zoom-in;
+      position: relative;
+    }
+    #threeCanvas:active {
+      cursor: grabbing;
+    }
+    .card-room-img {
+      height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      width: 100%;
+      display: block;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .form-select-sm, .form-control-sm {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+      border-color: #334155 !important;
+    }
+    /* Printable Real Invoice Styling */
+    .invoice-card {
+      background: #ffffff;
+      color: #1e293b;
+      border-radius: 12px;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+    }
+    .qr-code-img {
+      width: 110px;
+      height: 110px;
+      border: 2px solid #0f172a;
+      border-radius: 8px;
+      padding: 4px;
+      background: #fff;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #printableInvoice, #printableInvoice * { visibility: visible; }
+      #printableInvoice { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <a href="bus-booking.html" class="text-info text-decoration-none me-3"><i class="fa-solid fa-arrow-left"></i> Back to Bus Booking</a>
+        <h3 class="d-inline text-light"><i class="fa-solid fa-hotel text-info me-2"></i> Hotels & Rooms</h3>
+      </div>
+      <div>
+        <span class="badge bg-info text-dark p-2 fs-6">Live Destination: <span id="destDisplay">Bangalore</span></span>
+      </div>
+    </div>
+
+    <div class="row g-4" id="hotelGrid"></div>
+  </div>
+
+  <!-- 10-Second Auto-Rotating Multi-Company Advertisement Box -->
+  <div class="ad-sidebar" id="adBox">
+    <span class="ad-close-btn" onclick="document.getElementById('adBox').style.display='none'">&times;</span>
+    <small class="text-muted d-block mb-1">Sponsored Ad (<span id="adTimer">10</span>s)</small>
+    <div id="adContent"></div>
+  </div>
+
+  <!-- 3D Room Interactive WebGL Preview & Zoom Modal -->
+  <div class="status-overlay d-none" id="previewModal">
+    <div class="booking-card p-4 text-start" style="max-width: 720px; width: 95%;">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="text-info mb-0" id="modalHotelTitle">3D Interactive Room Tour</h5>
+        <button class="btn-close btn-close-white" onclick="closeModal()"></button>
+      </div>
+      
+      <p class="text-muted small mb-2"><i class="fa-solid fa-magnifying-glass-plus text-info me-1"></i> <strong>Scroll Mouse Wheel / Click Inside</strong> to Big Zoom into the 3D room! Drag to rotate 3D dimension.</p>
+
+      <div id="threeCanvas" class="mb-3"></div>
+
+      <div class="bg-dark p-3 rounded border border-secondary mb-3">
+        <h6 class="text-light mb-1" id="modalRoomType">Executive Deluxe Room</h6>
+        <p class="text-muted small mb-1" id="modalDesc">Spacious AC suite with modern amenities.</p>
+        <p class="text-info mb-2"><i class="fa-solid fa-phone me-2"></i>Contact: <strong id="modalPhone">+91 80 4252 1000</strong></p>
+        
+        <div class="row g-2 border-top border-secondary pt-2 mt-2">
+          <div class="col-6 col-md-3">
+            <label class="form-label text-muted small mb-1"><i class="fa-solid fa-door-closed text-info me-1"></i>Rooms</label>
+            <select class="form-select form-select-sm" id="modalSelectRooms" onchange="updateModalPrice()">
+              <option value="1" selected>1 Room</option>
+              <option value="2">2 Rooms</option>
+              <option value="3">3 Rooms</option>
+              <option value="4">4 Rooms</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label text-muted small mb-1"><i class="fa-solid fa-user text-info me-1"></i>Adults</label>
+            <select class="form-select form-select-sm" id="modalSelectAdults" onchange="updateModalPrice()">
+              <option value="1">1 Adult</option>
+              <option value="2" selected>2 Adults</option>
+              <option value="3">3 Adults</option>
+              <option value="4">4 Adults</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label text-muted small mb-1"><i class="fa-solid fa-child text-info me-1"></i>Children</label>
+            <select class="form-select form-select-sm" id="modalSelectChildren" onchange="updateModalPrice()">
+              <option value="0" selected>0 Children</option>
+              <option value="1">1 Child</option>
+              <option value="2">2 Children</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label text-muted small mb-1"><i class="fa-solid fa-users text-info me-1"></i>Total Guests</label>
+            <input type="text" class="form-control form-control-sm text-center fw-bold" id="modalTotalGuests" value="2 Guests" readonly />
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <small class="text-muted">Calculated Total Price</small>
+          <h4 class="text-info mb-0" id="modalPrice">₹2,400</h4>
+        </div>
+        <button class="btn btn-booking" onclick="confirmRoomBooking()">Confirm Room & Guests <i class="fa-solid fa-check ms-1"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real Detailed Printable Tax Invoice Modal WITH UPI QR CODE -->
+  <div class="status-overlay d-none" id="invoiceModal">
+    <div style="max-width: 680px; width: 95%;">
+      <div class="invoice-card" id="printableInvoice">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+          <div>
+            <h3 class="fw-bold text-dark mb-0"><i class="fa-solid fa-plane-departure me-2 text-primary"></i>GEN TRAVELS</h3>
+            <small class="text-muted">Official Booking & Tax Invoice</small>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-success mb-1">CONFIRMED & PAID</span>
+            <p class="small text-muted mb-0" id="invDate"></p>
+            <p class="small text-muted mb-0">Invoice #: <strong id="invNum">GT-90812</strong></p>
+          </div>
+        </div>
+
+        <div class="row mb-3 small align-items-center">
+          <div class="col-7">
+            <strong>Billed To (Guest):</strong><br>
+            <span>Verified Customer</span><br>
+            <span id="invGuests">2 Adults, 0 Children</span>
+            <hr class="my-2">
+            <strong>Hotel Property Details:</strong><br>
+            <strong id="invHotelName">Sheraton Gateway</strong><br>
+            <span id="invRoomType">Executive Suite</span><br>
+            <span id="invPhone">+91 80 4252 1000</span>
+          </div>
+
+          <!-- Integrated QR Code Section -->
+          <div class="col-5 text-center border-start ps-3">
+            <img id="invQrCode" src="" alt="Payment QR Code" class="qr-code-img mb-1" />
+            <small class="d-block fw-bold text-dark mb-0"><i class="fa-solid fa-qrcode text-primary me-1"></i>Scan to Pay / Verify</small>
+            <small class="text-muted extra-small">Supports GPay, PhonePe, Paytm</small>
+          </div>
+        </div>
+
+        <table class="table table-bordered table-sm mb-3 align-middle small">
+          <thead class="table-light">
+            <tr>
+              <th>Description</th>
+              <th class="text-center">Qty / Rooms</th>
+              <th class="text-end">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong id="invRoomDesc">Hotel Room Charge</strong><br>
+                <small class="text-muted">Accommodation base charge per night</small>
+              </td>
+              <td class="text-center" id="invQtyRooms">1</td>
+              <td class="text-end" id="invBasePrice">₹2,000</td>
+            </tr>
+            <tr>
+              <td>GST Tax (18%)<br><small class="text-muted">CGST (9%) + SGST (9%)</small></td>
+              <td class="text-center">-</td>
+              <td class="text-end" id="invGstPrice">₹360</td>
+            </tr>
+            <tr class="table-active fw-bold fs-6">
+              <td colspan="2" class="text-end">Grand Total Paid:</td>
+              <td class="text-end text-primary" id="invGrandTotal">₹2,360</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="border-top pt-2 text-muted extra-small d-flex justify-content-between align-items-center">
+          <small>GSTIN: 29AAAAA0000A1Z5 | Support: support@gentravels.com</small>
+          <small>Thank you for traveling with us!</small>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-3">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('invoiceModal').classList.add('d-none')">Close</button>
+        <button class="btn btn-info btn-sm fw-bold text-dark" onclick="window.print()"><i class="fa-solid fa-print me-1"></i> Print Real Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating AI Assistant Button -->
+  <div class="chat-toggle-btn" onclick="toggleChatWindow()">
+    <i class="fa-solid fa-robot"></i>
+  </div>
+
+  <!-- Floating AI Chat Window -->
+  <div class="chat-box-container d-none" id="chatBox">
+    <div class="chat-header d-flex justify-content-between align-items-center">
+      <span><i class="fa-solid fa-bot me-2"></i> GEN TRAVELS AI Support</span>
+      <span style="cursor:pointer;" onclick="toggleChatWindow()">&times;</span>
+    </div>
+    <div class="chat-body d-flex flex-column" id="chatMessages">
+      <div class="chat-msg bot">Hello! How can I help you with your bus booking, hotel stay, guest selection, or route questions today?</div>
+    </div>
+    <div class="p-2 border-top border-secondary d-flex gap-2">
+      <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="userChatInput" placeholder="Ask AI assistant..." onkeypress="handleChatKeyPress(event)">
+      <button class="btn btn-info btn-sm fw-bold" onclick="sendUserMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <script>
+    const destTo = sessionStorage.getItem('selectedTo') || 'Bangalore, Karnataka';
+    document.getElementById('destDisplay').innerText = destTo.split(',')[0];
+
+    // 10-Second Auto-Rotating Multi-Company Advertisements
+    const companyAds = [
+      {
+        company: "Amazon.in",
+        title: "🎒 Travel Luggage Sale",
+        desc: "Get up to 45% OFF on VIP & American Tourister bags today!",
+        btnText: "Buy on Amazon",
+        btnClass: "btn-warning",
+        link: "https://www.amazon.in"
+      },
+      {
+        company: "MakeMyTrip",
+        title: "✈️ Flight Booking Offer",
+        desc: "Flat ₹1,200 discount on instant domestic flight bookings!",
+        btnText: "Book Flights",
+        btnClass: "btn-danger",
+        link: "https://www.makemytrip.com"
+      },
+      {
+        company: "Flipkart",
+        title: "🎧 Noise Cancelling Audio",
+        desc: "Best Bluetooth headphones for smooth travel journeys.",
+        btnText: "Shop Flipkart",
+        btnClass: "btn-info text-dark",
+        link: "https://www.flipkart.com"
+      },
+      {
+        company: "Booking.com",
+        title: "🏨 Luxury Resort Deals",
+        desc: "Save 20% extra on verified beachside resorts & villas.",
+        btnText: "Explore Stay",
+        btnClass: "btn-primary",
+        link: "https://www.booking.com"
+      },
+      {
+        company: "Myntra",
+        title: "🕶️ Travel Sunglasses & Wear",
+        desc: "Trendy summer collection starts at just ₹499!",
+        btnText: "Shop Myntra",
+        btnClass: "btn-success",
+        link: "https://www.myntra.com"
+      }
+    ];
+
+    let currentAdIndex = 0;
+    let adCountdown = 10;
+
+    function renderAd() {
+      const ad = companyAds[currentAdIndex];
+      const container = document.getElementById('adContent');
+      container.innerHTML = `
+        <div class="bg-dark text-center p-2 rounded mb-2 text-info"><strong>${ad.title}</strong></div>
+        <p class="small text-light mb-2">${ad.desc}</p>
+        <small class="text-muted d-block mb-1">Partner: ${ad.company}</small>
+        <a href="${ad.link}" target="_blank" class="btn ${ad.btnClass} btn-sm w-100 fw-bold">${ad.btnText} <i class="fa-solid fa-up-right-from-square ms-1"></i></a>
+      `;
+    }
+
+    setInterval(() => {
+      adCountdown--;
+      if (adCountdown <= 0) {
+        adCountdown = 10;
+        currentAdIndex = (currentAdIndex + 1) % companyAds.length;
+        renderAd();
+      }
+      document.getElementById('adTimer').innerText = adCountdown;
+    }, 1000);
+
+    renderAd();
+
+    const realHotels = [
+      { name: "Sheraton Brigade Gateway", city: "Bangalore", phone: "+91 80 4252 1000", basePrice: 3800 },
+      { name: "Vivanta MG Road", city: "Bangalore", phone: "+91 80 6660 4444", basePrice: 3200 },
+      { name: "Hotel City Tower", city: "Coimbatore", phone: "+91 422 423 6999", basePrice: 1650 },
+      { name: "Sona's INN Anna Salai", city: "Chennai", phone: "+91 44 4207 2266", basePrice: 1500 }
+    ];
+
+    const roomImages50 = [
+      "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1591088398332-8a7791972843?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1568495248636-6432b97bd949?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1529290130-4ca3753253ae?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1455587734955-081b22074882?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1560185008-b033106af5c3?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&auto=format&fit=crop"
+    ];
+
+    const roomTypes = ["Standard Seater AC Room", "Executive Suite Room", "Deluxe Twin Bed Room", "Royal Luxury King Room"];
+
+    const generate50Listings = () => {
+      const list = [];
+      for (let i = 1; i <= 50; i++) {
+        const base = realHotels[(i - 1) % realHotels.length];
+        const roomType = roomTypes[(i - 1) % roomTypes.length];
+        const roomImg = roomImages50[i - 1];
+        list.push({
+          id: i,
+          hotelName: `${base.name} #${i}`,
+          city: base.city,
+          roomType: roomType,
+          image: roomImg,
+          description: `Real verified stay in ${base.city}. Clean ${roomType.toLowerCase()} with high-speed WiFi.`,
+          phone: base.phone,
+          price: base.basePrice + (i * 20),
+          rating: (4.0 + (i % 10) * 0.1).toFixed(1) + " ★"
+        });
+      }
+      return list;
+    };
+
+    const hotelData = generate50Listings();
+    let selectedHotel = null;
+
+    function render50Hotels() {
+      const grid = document.getElementById('hotelGrid');
+      grid.innerHTML = hotelData.map(h => `
+        <div class="col-xl-3 col-lg-4 col-md-6">
+          <div class="booking-card h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div class="position-relative mb-3">
+                <img src="${h.image}" alt="${h.hotelName}" class="card-room-img" />
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="badge bg-info text-dark">${h.city}</span>
+                <small class="text-warning fw-bold">${h.rating}</small>
+              </div>
+              <h6 class="mt-2 text-light mb-1">${h.hotelName}</h6>
+              <p class="text-info small mb-1"><i class="fa-solid fa-bed me-1"></i>${h.roomType}</p>
+              <p class="text-muted small mb-2">${h.description}</p>
+            </div>
+            <div class="border-top border-secondary pt-2 mt-2 d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-muted d-block"><i class="fa-solid fa-phone me-1"></i>${h.phone}</small>
+                <h5 class="text-info mb-0">₹${h.price} <small class="fs-6 text-muted">/night</small></h5>
+              </div>
+              <button class="btn btn-booking btn-sm" onclick="open3DPreview(${h.id})">
+                <i class="fa-solid fa-cube me-1"></i>3D View & Book
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    let scene, camera, renderer, controls, animationFrameId, roomMesh;
+
+    function init3DRoom(imageUrl) {
+      const container = document.getElementById('threeCanvas');
+      container.innerHTML = '';
+      
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(65, container.clientWidth / 320, 0.1, 1000);
+      
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, 320);
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.rotateSpeed = 0.8;
+      
+      controls.enableZoom = true;
+      controls.minDistance = 0.5;
+      controls.maxDistance = 5.0;
+
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.crossOrigin = 'Anonymous';
+      
+      textureLoader.load(imageUrl, function(texture) {
+        const geometry = new THREE.BoxGeometry(3.0, 2.0, 3.0);
+        const material = new THREE.MeshStandardMaterial({ 
+          map: texture, 
+          roughness: 0.2, 
+          side: THREE.DoubleSide 
+        });
+        
+        roomMesh = new THREE.Mesh(geometry, material);
+        scene.add(roomMesh);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(5, 5, 5);
+        scene.add(dirLight);
+
+        camera.position.set(0, 0, 2.2);
+        controls.update();
+
+        let isZoomedIn = false;
+        container.onclick = function() {
+          if(!isZoomedIn) {
+            camera.position.set(0, 0, 1.0);
+            isZoomedIn = true;
+          } else {
+            camera.position.set(0, 0, 2.2);
+            isZoomedIn = false;
+          }
+          controls.update();
+        };
+
+        function animate() {
+          animationFrameId = requestAnimationFrame(animate);
+          controls.update();
+          renderer.render(scene, camera);
+        }
+        animate();
+      });
+    }
+
+    function open3DPreview(id) {
+      selectedHotel = hotelData.find(h => h.id === id);
+      document.getElementById('modalHotelTitle').innerText = selectedHotel.hotelName;
+      document.getElementById('modalRoomType').innerText = `${selectedHotel.roomType} (${selectedHotel.city})`;
+      document.getElementById('modalDesc').innerText = selectedHotel.description;
+      document.getElementById('modalPhone').innerText = selectedHotel.phone;
+      
+      document.getElementById('modalSelectRooms').value = "1";
+      document.getElementById('modalSelectAdults').value = "2";
+      document.getElementById('modalSelectChildren').value = "0";
+      
+      updateModalPrice();
+      document.getElementById('previewModal').classList.remove('d-none');
+      
+      setTimeout(() => {
+        init3DRoom(selectedHotel.image);
+      }, 50);
+    }
+
+    function updateModalPrice() {
+      if (!selectedHotel) return;
+      const rooms = parseInt(document.getElementById('modalSelectRooms').value);
+      const adults = parseInt(document.getElementById('modalSelectAdults').value);
+      const children = parseInt(document.getElementById('modalSelectChildren').value);
+
+      const totalGuests = adults + children;
+      document.getElementById('modalTotalGuests').value = `${totalGuests} Guest${totalGuests > 1 ? 's' : ''}`;
+
+      const baseRoomTotal = selectedHotel.price * rooms;
+      const extraGuestFee = (adults > rooms * 2 ? (adults - rooms * 2) * 500 : 0) + (children * 250);
+      const finalPrice = baseRoomTotal + extraGuestFee;
+
+      document.getElementById('modalPrice').innerText = `₹${finalPrice.toLocaleString()}`;
+    }
+
+    function closeModal() {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      document.getElementById('previewModal').classList.add('d-none');
+    }
+
+    // Confirm Booking & Generate Real Tax Invoice Bill WITH DYNAMIC UPI QR CODE
+    function confirmRoomBooking() {
+      const rooms = document.getElementById('modalSelectRooms').value;
+      const adults = document.getElementById('modalSelectAdults').value;
+      const children = document.getElementById('modalSelectChildren').value;
+      
+      const rawPriceText = document.getElementById('modalPrice').innerText.replace(/[₹,]/g, '');
+      const grandTotalNum = parseFloat(rawPriceText);
+      const baseNum = Math.round(grandTotalNum / 1.18);
+      const gstNum = grandTotalNum - baseNum;
+
+      const bookingId = 'GT-' + Math.floor(10000 + Math.random() * 90000);
+      const nowStr = new Date().toLocaleString();
+
+      const roomBookingData = {
+        id: bookingId,
+        type: 'Accommodation',
+        hotelName: selectedHotel.hotelName,
+        roomType: selectedHotel.roomType,
+        city: selectedHotel.city,
+        roomsBooked: rooms,
+        guestsList: `${adults} Adult(s), ${children} Child(ren)`,
+        phone: selectedHotel.phone,
+        totalAmount: `₹${grandTotalNum.toLocaleString()}`,
+        status: 'CONFIRMED',
+        timestamp: nowStr
+      };
+
+      const existing = JSON.parse(localStorage.getItem('gt_booking_requests') || '[]');
+      existing.push(roomBookingData);
+      localStorage.setItem('gt_booking_requests', JSON.stringify(existing));
+
+      closeModal();
+
+      // Populate Invoice Fields
+      document.getElementById('invNum').innerText = bookingId;
+      document.getElementById('invDate').innerText = nowStr;
+      document.getElementById('invGuests').innerText = `${adults} Adults, ${children} Children`;
+      document.getElementById('invHotelName').innerText = selectedHotel.hotelName;
+      document.getElementById('invRoomType').innerText = selectedHotel.roomType;
+      document.getElementById('invPhone').innerText = selectedHotel.phone;
+      document.getElementById('invRoomDesc').innerText = `${selectedHotel.roomType} (${selectedHotel.city})`;
+      document.getElementById('invQtyRooms').innerText = `${rooms} Room(s)`;
+      document.getElementById('invBasePrice').innerText = `₹${baseNum.toLocaleString()}`;
+      document.getElementById('invGstPrice').innerText = `₹${gstNum.toLocaleString()}`;
+      document.getElementById('invGrandTotal').innerText = `₹${grandTotalNum.toLocaleString()}`;
+
+      // Dynamically Generate UPI Payment QR Code URL
+      const upiPayString = `upi://pay?pa=gentravels@upi&pn=GEN%20TRAVELS&am=${grandTotalNum}&cu=INR&tn=Invoice%20${bookingId}`;
+      const qrApiUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiPayString)}&size=150`;
+      document.getElementById('invQrCode').src = qrApiUrl;
+
+      // Show Invoice Modal
+      document.getElementById('invoiceModal').classList.remove('d-none');
+    }
+
+    function toggleChatWindow() {
+      document.getElementById('chatBox').classList.toggle('d-none');
+    }
+
+    function handleChatKeyPress(e) {
+      if (e.key === 'Enter') sendUserMessage();
+    }
+
+    function sendUserMessage() {
+      const input = document.getElementById('userChatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendChatMessage('user', text);
+      input.value = '';
+
+      saveChatToStorage('User', text);
+
+      setTimeout(() => {
+        let aiReply = "";
+        const lower = text.toLowerCase();
+
+        if (lower.includes('show') || lower.includes('page') || lower.includes('open bus')) {
+          aiReply = "Redirecting you to the Bus Booking page now...";
+          appendChatMessage('bot', aiReply);
+          saveChatToStorage('AI Bot', aiReply);
+          
+          setTimeout(() => {
+            window.location.href = "bus-booking.html";
+          }, 1200);
+          return;
+
+        } else if (lower.includes('qr') || lower.includes('bill') || lower.includes('invoice') || lower.includes('tax')) {
+          aiReply = "Once you confirm a room, a complete tax invoice bill with an embedded UPI QR code is automatically generated!";
+
+        } else if (lower.includes('zoom') || lower.includes('3d') || lower.includes('image')) {
+          aiReply = "Inside the 3D room modal, click the image container or scroll your mouse wheel to zoom big into the room!";
+
+        } else {
+          aiReply = "I am here to help! You can ask me to 'show bus booking page', adjust guest limits, search for hotel rooms, or guide you through seat selection.";
+        }
+
+        appendChatMessage('bot', aiReply);
+        saveChatToStorage('AI Bot', aiReply);
+      }, 600);
+    }
+
+    function appendChatMessage(sender, msg) {
+      const container = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = `chat-msg ${sender}`;
+      div.style.whiteSpace = "pre-line";
+      div.innerText = msg;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function saveChatToStorage(sender, text) {
+      const logs = JSON.parse(localStorage.getItem('gt_ai_chat_logs') || '[]');
+      logs.push({ 
+        sender: sender, 
+        message: text, 
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      });
+      localStorage.setItem('gt_ai_chat_logs', JSON.stringify(logs));
+    }
+
+    render50Hotels();
+  </script>
+</body>
+</html>
